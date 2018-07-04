@@ -7,6 +7,12 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Launch Program",
+            "program": "${workspaceFolder}/app_multi_user_file.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "nodemon",
             "runtimeExecutable": "nodemon",
             "program": "${workspaceFolder}/app_multi_user_file.js",
