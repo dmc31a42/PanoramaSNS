@@ -1,6 +1,7 @@
 var express = require('express');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
+var OrientoStore = require('connect-oriento')(session);
 var bodyParser = require('body-parser');
 var bkfd2Password = require("pbkdf2-password");
 var passport = require('passport');
@@ -17,7 +18,9 @@ app.use(session({
   secret: '1234DSFs@adf1234!@#$asd',
   resave: false,
   saveUninitialized: true,
-  store:new FileStore()
+  store:new OrientoStore({
+    server:'host=localhost&port=2424&username=root&password=111111&db=o2'
+  })
 }));
 app.use(passport.initialize());
 app.use(passport.session());
