@@ -1,7 +1,7 @@
 var express = require('express');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
-var OrientoStore = require('connect-oriento')(session);
+var MySQLStore = require('express-mysql-session')(session);
 var bodyParser = require('body-parser');
 var bkfd2Password = require("pbkdf2-password");
 var passport = require('passport');
@@ -18,8 +18,12 @@ app.use(session({
   secret: '1234DSFs@adf1234!@#$asd',
   resave: false,
   saveUninitialized: true,
-  store:new OrientoStore({
-    server:'host=localhost&port=2424&username=root&password=111111&db=o2'
+  store:new MySQLStore({
+    host: 'localhost',
+    port: 3306,
+    user:'root',
+    password: '111111',
+    database: 'o2'
   })
 }));
 app.use(passport.initialize());
@@ -173,12 +177,18 @@ app.post('/auth/register', function(req, res){
       salt:salt,
       displayName:req.body.displayName
     };
+    var sql = 'INSERT INTO user (authId, username, password, salt, displayName) VALUES(:authId, :username, :password, :salt, :displayName)';
+    db.query(sql, {
+      params:user
+    }).then(function(results){
+      res.redirect('/welcome');
+    })
     users.push(user);
-    req.login(user, function(err){
-      req.session.save(function(){
-        res.redirect('/welcome');
-      });
-    });
+    // req.login(user, function(err){
+    //   req.session.save(function(){
+    //     res.redirect('/welcome');
+    //   });
+    // });
   });
 });
 app.get('/auth/register', function(req, res){
