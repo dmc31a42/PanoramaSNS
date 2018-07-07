@@ -6,7 +6,7 @@ module.exports = function(passport, conn){
     route.get('/logout', function(req, res){
       req.logout();
       req.session.save(function(){
-        res.redirect('/welcome');
+        res.redirect('/topic');
       });
     });
     route.post(
@@ -21,7 +21,7 @@ module.exports = function(passport, conn){
       ),
       function(req, res){
         req.session.save(function(){
-          res.redirect('/welcome');
+          res.redirect('/topic');
         })
       }
     );
@@ -48,7 +48,7 @@ module.exports = function(passport, conn){
       ),
       function(req, res){
         req.session.save(function(){
-          res.redirect('/welcome');
+          res.redirect('/topic');
         })
       }
     );
@@ -78,10 +78,16 @@ module.exports = function(passport, conn){
       });
     });
     route.get('/register', function(req, res){
-      res.render('./auth/register');
+      var sql = 'SELECT id,title FROM topic';
+      conn.query(sql, function(err, topics, fields){
+        res.render('./auth/register',{topics:topics});
+      });
     });
     route.get('/login', function(req, res){
-      res.render('./auth/login');
+      var sql = 'SELECT id,title FROM topic';
+      conn.query(sql, function(err, topics, fields){
+        res.render('./auth/login',{topics:topics});
+      });
     });
 
     return route;

@@ -8,14 +8,14 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/app.js"
+            "program": "${workspaceFolder}/app_mysql.js"
         },
         {
             "type": "node",
             "request": "launch",
             "name": "nodemon",
             "runtimeExecutable": "nodemon",
-            "program": "${workspaceFolder}/app.js",
+            "program": "${workspaceFolder}/app_mysql.js",
             "restart": true,
             "console": "internalConsole",
             "internalConsoleOptions": "neverOpen"

@@ -1,11 +1,11 @@
 var app = require('./config/mysql/express')();
-var passport = require('./config/mysql/passport')(app);
-var auth = require('./routes/mysql/auth')(passport);
-app.use('/auth/', auth);
+var conn = require('./config/mysql/db')();
+var passport = require('./config/mysql/passport')(app, conn);
 
-var topic = require('./routes/mysql/topic')();
-app.use('/topic', topic);
-
-app.listen(3003, function(){
+var route_app = require('./routes/mysql/auth')(passport, conn);
+app.use('/auth/',route_app);
+var route_topic = require('./routes/mysql/topic')(conn);
+app.use('/topic',route_topic);
+app.listen(3000, function(){
   console.log('Connected, 3000 port!');
 })

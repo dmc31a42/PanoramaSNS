@@ -20,5 +20,7 @@ module.exports = function(){
         database: 'o2'
     })
     }));
+    app.locals.pretty = true;
+
     return app;
 }
