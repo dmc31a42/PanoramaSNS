@@ -1,5 +1,5 @@
-CREATE DATABASE PanoramaSNSdb1 CHARACTER SET utf8 COLLATE utf8_general_ci;
-use PanoramaSNSdb1;
+CREATE DATABASE panoramasnsdb1 CHARACTER SET utf8 COLLATE utf8_general_ci;
+use panoramasnsdb1;
 CREATE TABLE `topic` (
 `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(100) NOT NULL,

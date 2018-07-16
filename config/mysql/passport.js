@@ -54,7 +54,7 @@ module.exports = function(app, conn){
   passport.use(new FacebookStrategy({
       clientID: SERVER_CONFIG.FACEBOOK.FACEBOOK_APP_ID,
       clientSecret: SERVER_CONFIG.FACEBOOK.FACEBOOK_APP_SECRET,
-      callbackURL: "/auth/facebook/callback",
+      callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/facebook/callback",
       profileFields:['id', 'email','name', 'displayName']
     },
     function(accessToken, refreshToken, profile, done) {
@@ -84,11 +84,34 @@ module.exports = function(app, conn){
     }
   ));
   passport.use(new GoogleStrategy({
-    clientID: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_ID,
-    clientSecret: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_SECRET,
-    callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/google/callback"
-  }, function(accessToken, refreshToken, profile, done){
-    
-  }))
+      clientID: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_ID,
+      clientSecret: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_SECRET,
+      callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/google/callback",
+    }, function(accessToken, refreshToken, profile, done){
+      console.log(profile);
+      var authId = 'google:' + profile.id;
+      var sql = 'SELECT * from users WHERE authId=?';
+      conn.query(sql, authId, function(err, results){
+        if(results.length>0){
+          done(null, results[0]);
+        } else {
+          var sql1 = 'INSERT INTO users SET ?';
+          var newuser = {
+            'authId':authId,
+            'displayName':profile.displayName,
+            'email':profile.emails[0].value,
+          };
+          conn.query(sql1, newuser, function(err, results){
+            if(err){
+              console.log(err);
+              done(err);
+            } else {
+              done(null, newuser);
+            }
+          });
+        }
+      })
+    }
+  ))
   return passport;
 }

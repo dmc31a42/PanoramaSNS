@@ -101,7 +101,7 @@ module.exports = function(conn){
           }
         });
       } else {
-        res.render('topic/view', {topics:topics, user:req.user});
+        res.render('topic/view', {topics:topics, user:req.user, messages:req.flash('unregister')});
       }
     });
   });

@@ -3,11 +3,20 @@ html
   head
     meta(charset='utf-8')
   body
+    if messages
+      for message in messages
+        a.alert(class='alert-' + message)
+          p= message
     ul#account
       if user
         li
-          a(href='/auth/logout') Logout,
-          |&nbsp;#{user.displayName}
+          p
+            a(href='/auth/logout') Logout,
+            |&nbsp;#{user.displayName}
+          p
+            form(action="/auth/unregister", method="post") 
+              p 
+                input(type="submit")
       else
         li
           a(href='/auth/register') Register

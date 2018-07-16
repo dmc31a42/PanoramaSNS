@@ -52,6 +52,34 @@ module.exports = function(passport, conn){
         })
       }
     );
+    route.get(
+      '/google',
+      passport.authenticate(
+        'google',
+        {
+          scope:
+          [
+            'https://www.googleapis.com/auth/plus.login',
+            'https://www.googleapis.com/auth/userinfo.email'
+          ]
+        }
+      )
+    );
+    route.get(
+      '/google/callback',
+      passport.authenticate(
+        'google', 
+        { 
+          //successRedirect: '/welcome',
+          failureRedirect: '/auth/login'
+        }
+      ),
+      function(req, res){
+        req.session.save(function(){
+          res.redirect('/topic');
+        })
+      }
+    );
     route.post('/register', function(req, res){
       hasher({password:req.body.password}, function(err, pass, salt, hash){
         var user = {
@@ -89,6 +117,25 @@ module.exports = function(passport, conn){
         res.render('./auth/login',{topics:topics});
       });
     });
-
+    route.post('/unregister', function(req, res){
+      if(req.user){
+        var authId = req.user.authId;
+        var sql = 'DELETE FROM users WHERE authId=?'
+        conn.query(sql, authId, function(err, results){
+          if(err){
+            console.log(err);
+            res.status(500);
+          } else {
+            req.logout();
+            req.session.save(function(){
+              req.flash('unregister','Unregisted');
+              res.redirect('/topic');
+            })
+          }
+        });
+      } else {
+        res.status(404);
+      }
+    });
     return route;
 }
