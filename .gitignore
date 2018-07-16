@@ -87,4 +87,4 @@ typings/
 # End of https://www.gitignore.io/api/node,visualstudiocode
 
 sessions/
-OAuth.key.json
+config/mysql/config.json

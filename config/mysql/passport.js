@@ -2,11 +2,12 @@ module.exports = function(app, conn){
   var passport = require('passport');
   var LocalStrategy = require('passport-local').Strategy;
   var FacebookStrategy = require('passport-facebook').Strategy;
+  var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
   var bkfd2Password = require("pbkdf2-password");
   var hasher = bkfd2Password();
   var fs = require('fs');
-  var contents = fs.readFileSync('./config/mysql/OAuth.key.json');
-  var OAuth_Key = JSON.parse(contents);
+  var contents = fs.readFileSync('./config/mysql/config.json');
+  var SERVER_CONFIG = JSON.parse(contents);
   app.use(passport.initialize());
   app.use(passport.session());
   
@@ -51,8 +52,8 @@ module.exports = function(app, conn){
     }
   ));
   passport.use(new FacebookStrategy({
-      clientID: OAuth_Key.FACEBOOK_APP_ID,
-      clientSecret: OAuth_Key.FACEBOOK_APP_SECRET,
+      clientID: SERVER_CONFIG.FACEBOOK.FACEBOOK_APP_ID,
+      clientSecret: SERVER_CONFIG.FACEBOOK.FACEBOOK_APP_SECRET,
       callbackURL: "/auth/facebook/callback",
       profileFields:['id', 'email','name', 'displayName']
     },
@@ -82,5 +83,12 @@ module.exports = function(app, conn){
       })
     }
   ));
+  passport.use(new GoogleStrategy({
+    clientID: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_ID,
+    clientSecret: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_SECRET,
+    callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/google/callback"
+  }, function(accessToken, refreshToken, profile, done){
+    
+  }))
   return passport;
 }

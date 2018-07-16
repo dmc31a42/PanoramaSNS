@@ -60,7 +60,7 @@ module.exports = function(passport, conn){
           password:hash,
           salt:salt,
           displayName:req.body.displayName,
-          email: 'TEMP@temp.com'
+          //email: 'TEMP@temp.com'
         };
         var sql = 'INSERT INTO users SET ?';
         conn.query(sql, user,function(err, results){
@@ -70,7 +70,7 @@ module.exports = function(passport, conn){
           } else {
             req.login(user, function(err){
               req.session.save(function(){
-                res.redirect('/welcome');
+                res.redirect('/topic');
               });
             });
           }

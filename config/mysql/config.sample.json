@@ -1,0 +1,25 @@
+{
+    "FACEBOOK":{
+        "FACEBOOK_APP_ID": "Your_Facebook_App_ID",
+        "FACEBOOK_APP_SECRET": "Your_Facebook_App_SECRET"
+    },
+    "GOOGLE":{
+        "GOOGLE_CLIENT_ID": "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET": "GOOGLE_CLIENT_SECRET"
+    },
+    "MYSQL":{
+        "ConnectionFlags": {
+            "host": "localhost",
+            "port": 3306,
+            "user": "root",
+            "password": "password",
+            "database": "database"
+        }
+    },
+    "SESSION": {
+        "secret": "secret"
+    },
+    "HOST": {
+        "Default_URL": "http://localhost:3000"
+    }
+}

@@ -4,22 +4,21 @@ module.exports = function(){
     var MySQLStore = require('express-mysql-session')(session);
     var bodyParser = require('body-parser');
 
+    var fs = require('fs');
+    var contents = fs.readFileSync('./config/mysql/config.json');
+    var SERVER_CONFIG = JSON.parse(contents);
+
     var app = express();
     app.set('views','./views/mysql');
     app.set('view engine', 'jade');
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(session({
-    secret: '1234DSFs@adf1234!@#$asd',
-    resave: false,
-    saveUninitialized: true,
-    store:new MySQLStore({
-        host: 'localhost',
-        port: 3306,
-        user:'root',
-        password: '111111',
-        database: 'o2'
-    })
-    }));
+        secret: SERVER_CONFIG.SESSION.secret,
+        resave: false,
+        saveUninitialized: true,
+        store:new MySQLStore(SERVER_CONFIG.MYSQL.ConnectionFlags)
+        }
+    ));
     app.locals.pretty = true;
 
     return app;
