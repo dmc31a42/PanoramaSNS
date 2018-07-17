@@ -37,21 +37,26 @@ module.exports = function(passport, conn){
         }
       )
     );
-    route.get(
-      '/facebook/callback',
-      passport.authenticate(
-        'facebook', 
-        { 
-          //successRedirect: '/welcome',
-          failureRedirect: '/auth/login'
+    route.get('/facebook/callback', function(req, res, next) {
+      passport.authenticate('facebook',{failureFlash: true}, function(err, user, info) {
+        if(err && err.code && err.code == "RegisterRequired"){
+          req.flash('RegisterRequired',JSON.stringify(err.newuser));
+          return res.redirect('/auth/register/oauth');
         }
-      ),
-      function(req, res){
-        req.session.save(function(){
-          res.redirect('/topic');
-        })
-      }
-    );
+        else if (err || !user) {
+          res.status(500);
+          return res.redirect('/auth/login');
+        }
+        req.logIn(user, function(err) {
+          if (err) { 
+            return res.redirect('/auth/login');
+          }
+          return req.session.save(function(){
+            res.redirect('/topic');
+          });
+        });
+      })(req, res, next);
+    });
     route.get(
       '/google',
       passport.authenticate(
@@ -104,6 +109,20 @@ module.exports = function(passport, conn){
           }
         })
       });
+    });
+    route.get('/register/oauth',function(req,res){
+      var newuserString = req.flash('RegisterRequired');
+      if(newuserString.length!=0){
+        var newuser = JSON.parse(newuserString[0]);
+        var sql = 'SELECT id,title FROM topic';
+        conn.query(sql, function(err, topics, fields){
+          res.render('./auth/register/oauth',{'newuser':newuser,topics:topics});
+        });
+        
+      } else {
+        res.status(404);
+        return res.redirect('/auth/login');
+      }
     });
     route.get('/register', function(req, res){
       var sql = 'SELECT id,title FROM topic';

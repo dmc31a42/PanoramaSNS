@@ -65,20 +65,26 @@ module.exports = function(app, conn){
         if(results.length>0){
           done(null, results[0]);
         } else {
-          var sql1 = 'INSERT INTO users SET ?';
+          // var sql1 = 'INSERT INTO users SET ?';
+          // var newuser = {
+          //   'authId':authId,
+          //   'displayName':profile.displayName,
+          //   'email':profile.emails[0].value,
+          // };
+          // conn.query(sql1, newuser, function(err, results){
+          //   if(err){
+          //     console.log(err);
+          //     done(err);
+          //   } else {
+          //     done(null, newuser);
+          //   }
+          // });
           var newuser = {
             'authId':authId,
             'displayName':profile.displayName,
             'email':profile.emails[0].value,
           };
-          conn.query(sql1, newuser, function(err, results){
-            if(err){
-              console.log(err);
-              done(err);
-            } else {
-              done(null, newuser);
-            }
-          });
+          done({'code':"RegisterRequired",'newuser':newuser});
         }
       })
     }

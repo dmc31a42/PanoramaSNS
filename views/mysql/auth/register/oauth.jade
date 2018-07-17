@@ -1,0 +1,12 @@
+extends ../../layout
+block content
+  h1 OAuth Register
+  form(action="/auth/register/oauth", method="post")
+    p
+      input(type="text", name="username", placeholder=newuser.authId)
+    p
+      input(type="text", name="displayName", placeholder=newuser.displayName)
+    p
+      input(type="text", name="email", placeholder=newuser.email)
+    p
+      input(type="submit")
