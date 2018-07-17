@@ -116,12 +116,42 @@ module.exports = function(passport, conn){
         var newuser = JSON.parse(newuserString[0]);
         var sql = 'SELECT id,title FROM topic';
         conn.query(sql, function(err, topics, fields){
-          res.render('./auth/register/oauth',{'newuser':newuser,topics:topics});
+          req.session.tempauthId = newuser.authId;
+          req.session.save(function(){
+            res.render('./auth/register/oauth',{
+              'newuser':{
+                'displayName': newuser.displayName,
+                'email': newuser.email
+              },
+              topics:topics});
+          })
         });
-        
       } else {
         res.status(404);
         return res.redirect('/auth/login');
+      }
+    });
+    route.post('/register/oauth', function(req, res){
+      if(req.session.tempauthId){
+        var sql = 'INSERT INTO users SET ?';
+        var newuser = {
+          'authId': req.session.tempauthId,
+          'displayName': req.body.displayName,
+          'email': req.body.email
+        };
+        conn.query(sql, newuser, function(err, results){
+          if(err){
+            console.log(err);
+            res.status(500);
+            res.redirect('/auth/login');
+          } else {
+            req.login(newuser, function(err){
+              req.session.save(function(){
+                res.redirect('/topic');
+              });
+            });
+          }
+        });
       }
     });
     route.get('/register', function(req, res){

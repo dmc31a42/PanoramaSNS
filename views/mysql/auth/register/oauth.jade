@@ -3,10 +3,8 @@ block content
   h1 OAuth Register
   form(action="/auth/register/oauth", method="post")
     p
-      input(type="text", name="username", placeholder=newuser.authId)
+      input(type="text", name="displayName", value=newuser.displayName)
     p
-      input(type="text", name="displayName", placeholder=newuser.displayName)
-    p
-      input(type="text", name="email", placeholder=newuser.email)
+      input(type="text", name="email", value=newuser.email)
     p
       input(type="submit")
