@@ -52,50 +52,57 @@ module.exports = function(app, conn){
       })
     }
   ));
+  function OAuthStrategy(req, done, newuser){
+    return function(err, results) {
+      if(err){
+        done(err);
+      } else if(results.length>0){
+        if(req.user){
+          done({'code':'AlreadyAccountExist'});
+        } else {
+          done(null, results[0]);
+        }
+      } else {
+        if(req.user){
+          done(null, req.user, {'code':"LinkRequired",'newuser':newuser});
+        } else {
+          done(null, null, {'code':"RegisterRequired",'newuser':newuser});
+        }
+      }
+    }
+  }
   passport.use(new FacebookStrategy({
       clientID: SERVER_CONFIG.FACEBOOK.FACEBOOK_APP_ID,
       clientSecret: SERVER_CONFIG.FACEBOOK.FACEBOOK_APP_SECRET,
       callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/facebook/callback",
-      profileFields:['id', 'email','name', 'displayName']
+      profileFields:['id', 'email','name', 'displayName'],
+      passReqToCallback: true
     },
-    function(accessToken, refreshToken, profile, done) {
+    function(req, accessToken, refreshToken, profile, done) {
       console.log(profile);
-      var facebookId = profile.id;
+      var newuser = {
+        'facebookId':profile.id,
+        'displayName':profile.displayName,
+        'email':profile.emails[0].value,
+      };
       var sql = 'SELECT * from users WHERE facebookId=?';
-      conn.query(sql, facebookId, function(err, results){
-        if(results.length>0){
-          done(null, results[0]);
-        } else {
-          var newuser = {
-            'facebookId':facebookId,
-            'displayName':profile.displayName,
-            'email':profile.emails[0].value,
-          };
-          done({'code':"RegisterRequired",'newuser':newuser});
-        }
-      })
+      conn.query(sql, newuser.facebookId, OAuthStrategy(req, done, newuser));
     }
   ));
   passport.use(new GoogleStrategy({
       clientID: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_ID,
       clientSecret: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_SECRET,
       callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/google/callback",
-    }, function(accessToken, refreshToken, profile, done){
+      passReqToCallback: true,
+    }, function(req, accessToken, refreshToken, profile, done){
       console.log(profile);
-      var googleId = profile.id;
+      var newuser = {
+        'googleId':profile.id,
+        'displayName':profile.displayName,
+        'email':profile.emails[0].value,
+      };
       var sql = 'SELECT * from users WHERE googleId=?';
-      conn.query(sql, googleId, function(err, results){
-        if(results.length>0){
-          done(null, results[0]);
-        } else {
-          var newuser = {
-            'googleId':googleId,
-            'displayName':profile.displayName,
-            'email':profile.emails[0].value,
-          };
-          done({'code':"RegisterRequired",'newuser':newuser});
-        }
-      })
+      conn.query(sql, newuser.googleId, OAuthStrategy(req, done, newuser));
     }
   ));
   passport.use(new TwitterStrategy({
@@ -106,20 +113,13 @@ module.exports = function(app, conn){
     passReqToCallback: true
   }, function(req, accessToken, tokenSecret, profile, done){
     console.log(profile);
-    var twitterId = profile.id;
+    var newuser = {
+      'twitterId':profile.id,
+      'displayName': profile.displayName,
+      // 'email': profile.emails[0].value, https://github.com/jaredhanson/passport-twitter/issues/67
+    };
     var sql = 'SELECT * from users WHERE twitterId=?';
-    conn.query(sql, twitterId, function(err, results){
-      if(results.length>0){
-        done(null, results[0]);
-      } else {
-        var newuser = {
-          'twitterId':twitterId,
-          'displayName': profile.displayName,
-          // 'email': profile.emails[0].value, https://github.com/jaredhanson/passport-twitter/issues/67
-        };
-        done({'code':"RegisterRequired", 'newuser': newuser});
-      }
-    })
+    conn.query(sql, newuser.twitterId, OAuthStrategy(req, done, newuser));
   }))
   return passport;
 }

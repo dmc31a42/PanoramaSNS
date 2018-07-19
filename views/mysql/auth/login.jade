@@ -1,5 +1,8 @@
 extends ../layout
 block layout
+  if errors
+    each error in errors
+      li=error
   h1 Login
   form(action="/auth/login", method="post")
     p

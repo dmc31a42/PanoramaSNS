@@ -12,7 +12,8 @@ html
         li
           p
             a(href='/auth/logout') Logout,
-            |&nbsp;#{user.displayName}
+            |&nbsp;
+            a(href='/profile')=user.displayName
           p
             form(action="/auth/unregister", method="post") 
               p 

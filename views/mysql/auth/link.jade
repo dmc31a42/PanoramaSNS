@@ -1,0 +1,21 @@
+extends ../layout
+block layout
+  form(action="/auth/link", method="post")
+    p
+      |기존&nbsp;
+      if user.facebookId
+        |facebook&nbsp;
+      if user.googleId
+        |google&nbsp;
+      if user.twitterId
+        |twitter&nbsp;
+    p
+      |신규&nbsp;
+      if newuser.facebookId
+        |facebook
+      if newuser.googleId
+        |google
+      if newuser.twitterId
+        |twitter
+    p
+      input(type="submit")

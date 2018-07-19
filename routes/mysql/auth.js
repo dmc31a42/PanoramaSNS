@@ -3,10 +3,12 @@ module.exports = function(passport, conn){
     var bkfd2Password = require("pbkdf2-password");
     var hasher = bkfd2Password();
     route.get('/login', function(req, res){
-      var sql = 'SELECT id,title FROM topic';
-      conn.query(sql, function(err, topics, fields){
-        res.render('./auth/login',{topics:topics});
-      });
+      var message = {};
+      var errors = req.flash('error');
+      if(errors){
+        message.errors = errors;
+      }
+      res.render('./auth/login',message);
     });
     route.post(
       '/login',
@@ -36,24 +38,82 @@ module.exports = function(passport, conn){
         'email'
       ]
     }));
-    route.get('/facebook/callback', function(req, res, next) {
-      passport.authenticate('facebook', function(err, user, info) {
-        if(err && err.code && err.code == "RegisterRequired"){
-          req.flash('RegisterRequired',JSON.stringify(err.newuser));
-          return res.redirect('/auth/register/oauth');
+    route.get('/link', function(req, res, next){
+      var newuserString = req.flash('LinkRequired');
+      if(newuserString.length!=0) {
+        var newuser = JSON.parse(newuserString[0]);
+        req.session.tempuser = newuser;
+        req.session.save(function(){
+          res.render('./auth/link', {
+            'user': req.user,
+            'newuser': newuser
+          });
+        })
+      } else {
+        res.status(404);
+        return res.redirect('/auth/login');
+      }
+    });
+    route.post('/link', function(req, res){
+      if(req.session.tempuser){
+        var sql = 'UPDATE users SET ? WHERE id=?';
+        var newuser = {};
+        if(req.session.tempuser.facebookId){
+          newuser.facebookId = req.session.tempuser.facebookId;
+        } else if(req.session.tempuser.googleId){
+          newuser.googleId = req.session.tempuser.googleId;
+        } else if(req.session.tempuser.twitterId){
+          newuser.twitterId = req.session.tempuser.twitterId;
+        }
+        delete req.session['tempuser'];
+        conn.query(sql, [newuser, req.user.id], function(err, results){
+          if(err){
+            console.log(err);
+            res.status(500);
+            res.redirect('/auth/login');
+          } else {
+            req.logIn(results[0], function(err){
+              req.session.save(function(){
+                res.redirect('/profile');
+              })
+            })
+          }
+        });
+      } else {
+        res.status(404);
+        return res.redirect('/auth/login');
+      }
+    })
+    function OAuthCallback(req, res, next){
+      return function OAuthCallback_internal(err, user, info){
+        if(info && info.code){
+          if(info.code == "RegisterRequired"){
+            req.flash('RegisterRequired',JSON.stringify(info.newuser));
+            return res.redirect('/auth/register/oauth');
+          } else if(info.code == "LinkRequired"){
+            req.flash('LinkRequired',JSON.stringify(info.newuser));
+            return res.redirect('/auth/link');
+          } else {
+            res.status(500);
+            return res.redirect('/auth/login');
+          }
         } else if (err || !user) {
           res.status(500);
           return res.redirect('/auth/login');
-        }
-        req.logIn(user, function(err) {
-          if (err) { 
-            return res.redirect('/auth/login');
-          }
-          return req.session.save(function(){
-            res.redirect('/topic');
+        } else{
+          req.logIn(user, function(err) {
+            if (err) { 
+              return res.redirect('/auth/login');
+            }
+            return req.session.save(function(){
+              res.redirect('/topic');
+            });
           });
-        });
-      })(req, res, next);
+        }
+      }
+    }
+    route.get('/facebook/callback', function(req, res, next) {
+      passport.authenticate('facebook', OAuthCallback(req, res, next))(req, res, next);
     });
     route.get('/google', passport.authenticate('google', {
       scope:
@@ -63,23 +123,7 @@ module.exports = function(passport, conn){
       ]
     }));
     route.get('/google/callback', function(req, res, next) {
-      passport.authenticate('google', function(err, user, info){
-        if(err && err.code && err.code == "RegisterRequired"){
-          req.flash('RegisterRequired', JSON.stringify(err.newuser));
-          return res.redirect('/auth/register/oauth');
-        } else if (err || !user){
-          res.status(500);
-          return res.redirect('/auth/login');
-        }
-        req.logIn(user, function(err){
-          if(err) {
-            return res.redirect('/auth/login');
-          }
-          return req.session.save(function(){
-            res.redirect('/topic');
-          });
-        });
-      })(req, res, next);
+      passport.authenticate('google', OAuthCallback(req, res, next))(req, res, next);
     });
     route.get('/twitter', passport.authenticate('twitter', {
       // scope:
@@ -89,23 +133,7 @@ module.exports = function(passport, conn){
       // ]
     }));
     route.get('/twitter/callback', function(req, res, next) {
-      passport.authenticate('twitter', function(err, user, info){
-        if(err && err.code && err.code == "RegisterRequired"){
-          req.flash('RegisterRequired', JSON.stringify(err.newuser));
-          return res.redirect('/auth/register/oauth');
-        } else if (err || !user){
-          res.status(500);
-          return res.redirect('/auth/login');
-        }
-        req.logIn(user, function(err){
-          if(err) {
-            return res.redirect('/auth/login');
-          }
-          return req.session.save(function(){
-            res.redirect('/topic');
-          });
-        });
-      })(req, res, next);
+      passport.authenticate('twitter', OAuthCallback(req, res, next))(req, res, next);
     });
     route.post('/register', function(req, res){
       hasher({password:req.body.password}, function(err, pass, salt, hash){
@@ -198,9 +226,9 @@ module.exports = function(passport, conn){
     });
     route.post('/unregister', function(req, res){
       if(req.user){
-        var authId = req.user.authId;
-        var sql = 'DELETE FROM users WHERE authId=?'
-        conn.query(sql, authId, function(err, results){
+        var id = req.user.id;
+        var sql = 'DELETE FROM users WHERE id=?'
+        conn.query(sql, id, function(err, results){
           if(err){
             console.log(err);
             res.status(500);

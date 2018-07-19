@@ -1,0 +1,34 @@
+extends layout
+block layout
+  p 사용자명: #{user.displayName}
+  p 이메일 : #{user.email}
+  p
+    |local id/password: 
+    if user.localId
+      |linked
+      |&nbsp;unlink(미구현)
+    else
+      a(href="/auth/register") create
+  p
+    |facebook: 
+    if user.facebookId
+      |linked
+      |&nbsp;unlink(미구현)
+    else
+      a(href="/auth/facebook") link
+  p
+    |google: 
+    if user.googleId
+      |linked
+      |&nbsp;unlink(미구현)
+    else
+      a(href="/auth/google") link
+  p
+    |twitter: 
+    if user.twitterId
+      |linked
+      |&nbsp;unlink(미구현)
+    else
+      a(href="/auth/twitter") link
+
+    
