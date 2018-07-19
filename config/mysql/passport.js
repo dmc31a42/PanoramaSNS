@@ -59,28 +59,14 @@ module.exports = function(app, conn){
     },
     function(accessToken, refreshToken, profile, done) {
       console.log(profile);
-      var authId = 'facebook:' + profile.id;
-      var sql = 'SELECT * from users WHERE authId=?';
-      conn.query(sql, authId, function(err, results){
+      var facebookId = profile.id;
+      var sql = 'SELECT * from users WHERE facebookId=?';
+      conn.query(sql, facebookId, function(err, results){
         if(results.length>0){
           done(null, results[0]);
         } else {
-          // var sql1 = 'INSERT INTO users SET ?';
-          // var newuser = {
-          //   'authId':authId,
-          //   'displayName':profile.displayName,
-          //   'email':profile.emails[0].value,
-          // };
-          // conn.query(sql1, newuser, function(err, results){
-          //   if(err){
-          //     console.log(err);
-          //     done(err);
-          //   } else {
-          //     done(null, newuser);
-          //   }
-          // });
           var newuser = {
-            'authId':authId,
+            'facebookId':facebookId,
             'displayName':profile.displayName,
             'email':profile.emails[0].value,
           };

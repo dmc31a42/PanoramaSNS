@@ -12,12 +12,15 @@ INSERT INTO topic (title, description, author) VALUES('NPM','Package manager', '
 
 CREATE TABLE users ( 
     id INT NOT NULL AUTO_INCREMENT , 
-    authId VARCHAR(50) NOT NULL ,
-    username VARCHAR(30), 
-    password VARCHAR(255), 
-    salt VARCHAR(255),
     displayName VARCHAR(50) NOT NULL,
-    email VARCHAR(50), 
+    localId VARCHAR(50),
+    password VARCHAR(255),
+    salt VARCHAR(255), 
+    email VARCHAR(50),
+    facebookId VARCHAR(50),
+    googleId VARCHAR(50),
+    twitter VARCHAR(50),
+    kakaoId VARCHAR(50),
     PRIMARY KEY (id), 
-    UNIQUE (authId)
+    UNIQUE (id)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8;

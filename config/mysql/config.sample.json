@@ -7,6 +7,10 @@
         "GOOGLE_CLIENT_ID": "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET": "GOOGLE_CLIENT_SECRET"
     },
+    "TWITTER":{
+        "consumerKey": "consumerKey",
+        "consumerSecret": "consumerSecret"
+    },
     "MYSQL":{
         "ConnectionFlags": {
             "host": "localhost",
