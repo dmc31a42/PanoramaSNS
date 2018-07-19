@@ -19,7 +19,7 @@ CREATE TABLE users (
     email VARCHAR(50),
     facebookId VARCHAR(50),
     googleId VARCHAR(50),
-    twitter VARCHAR(50),
+    twitterId VARCHAR(50),
     kakaoId VARCHAR(50),
     PRIMARY KEY (id), 
     UNIQUE (id)

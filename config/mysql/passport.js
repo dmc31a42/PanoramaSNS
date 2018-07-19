@@ -3,6 +3,7 @@ module.exports = function(app, conn){
   var LocalStrategy = require('passport-local').Strategy;
   var FacebookStrategy = require('passport-facebook').Strategy;
   var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+  var TwitterStrategy = require('passport-twitter').Strategy;
   var bkfd2Password = require("pbkdf2-password");
   var hasher = bkfd2Password();
   var fs = require('fs');
@@ -13,11 +14,11 @@ module.exports = function(app, conn){
   
   passport.serializeUser(function(user, done) {
     console.log('serializeUser', user);
-    done(null, user.authId);
+    done(null, user.id);
   });
   passport.deserializeUser(function(id, done) {
     console.log('deserializeUser', id);
-    var sql = 'SELECT * from users WHERE authId=?';
+    var sql = 'SELECT * from users WHERE id=?';
     conn.query(sql, id, function(err, results){
       if(err){
         done(err);
@@ -30,8 +31,8 @@ module.exports = function(app, conn){
     function(username, password, done){
       var uname = username;
       var pwd = password;
-      var sql = 'SELECT * from users WHERE authId=?';
-      conn.query(sql, ['local:'+ uname],function(err,results){
+      var sql = 'SELECT * from users WHERE localId=?';
+      conn.query(sql, [uname],function(err,results){
         console.log(results);
         if(err){
           return done(err);
@@ -81,29 +82,44 @@ module.exports = function(app, conn){
       callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/google/callback",
     }, function(accessToken, refreshToken, profile, done){
       console.log(profile);
-      var authId = 'google:' + profile.id;
-      var sql = 'SELECT * from users WHERE authId=?';
-      conn.query(sql, authId, function(err, results){
+      var googleId = profile.id;
+      var sql = 'SELECT * from users WHERE googleId=?';
+      conn.query(sql, googleId, function(err, results){
         if(results.length>0){
           done(null, results[0]);
         } else {
-          var sql1 = 'INSERT INTO users SET ?';
           var newuser = {
-            'authId':authId,
+            'googleId':googleId,
             'displayName':profile.displayName,
             'email':profile.emails[0].value,
           };
-          conn.query(sql1, newuser, function(err, results){
-            if(err){
-              console.log(err);
-              done(err);
-            } else {
-              done(null, newuser);
-            }
-          });
+          done({'code':"RegisterRequired",'newuser':newuser});
         }
       })
     }
-  ))
+  ));
+  passport.use(new TwitterStrategy({
+    consumerKey: SERVER_CONFIG.TWITTER.consumerKey,
+    consumerSecret: SERVER_CONFIG.TWITTER.consumerSecret,
+    callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/twitter/callback",
+    profileFields: ['id', 'displayName', 'username', 'photos', '_json'],
+    passReqToCallback: true
+  }, function(req, accessToken, tokenSecret, profile, done){
+    console.log(profile);
+    var twitterId = profile.id;
+    var sql = 'SELECT * from users WHERE twitterId=?';
+    conn.query(sql, twitterId, function(err, results){
+      if(results.length>0){
+        done(null, results[0]);
+      } else {
+        var newuser = {
+          'twitterId':twitterId,
+          'displayName': profile.displayName,
+          // 'email': profile.emails[0].value, https://github.com/jaredhanson/passport-twitter/issues/67
+        };
+        done({'code':"RegisterRequired", 'newuser': newuser});
+      }
+    })
+  }))
   return passport;
 }

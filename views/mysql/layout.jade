@@ -24,8 +24,4 @@ html
           a(href='/auth/login') Login
     h1
       a(href='/topic') Server Side JavaScript
-    ul
-      each topic in topics
-        li
-          a(href='/topic/'+topic.id)= topic.title
-    block content
+    block layout

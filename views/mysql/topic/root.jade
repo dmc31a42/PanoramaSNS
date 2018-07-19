@@ -1,0 +1,7 @@
+extends ../layout
+block layout
+  ul
+    each topic in topics
+      li
+          a(href='/topic/'+topic.id)= topic.title
+  block content

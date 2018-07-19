@@ -1,5 +1,5 @@
 extends ../layout
-block content
+block layout
   h1 Login
   form(action="/auth/login", method="post")
     p
@@ -12,3 +12,5 @@ block content
       a(href="/auth/facebook") facebook
     p
       a(href="/auth/google") google
+    p
+      a(href="/auth/twitter") twitter
