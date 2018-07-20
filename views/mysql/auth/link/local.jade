@@ -1,6 +1,6 @@
-extends ../layout
+extends ../../layout
 block layout
-  form(action="/auth/link", method="post")
+  form(action="/auth/link/local", method="post")
     p
       |기존&nbsp;
       if user.facebookId
@@ -11,11 +11,9 @@ block layout
         |twitter&nbsp;
     p
       |신규&nbsp;
-      if newuser.facebookId
-        |facebook
-      if newuser.googleId
-        |google
-      if newuser.twitterId
-        |twitter
+      p
+        input(type="text", name="username", placeholder="username")
+      p
+        input(type="password", name="password", placeholder="password")
     p
       input(type="submit")

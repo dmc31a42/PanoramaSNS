@@ -38,13 +38,54 @@ module.exports = function(passport, conn){
         'email'
       ]
     }));
-    route.get('/link', function(req, res, next){
+    route.get('/link/local', function(req, res, next){
+      res.render('./auth/link/local',{'user': req.user});
+    })
+    route.post('/link/local', function(req, res, next){
+      var sql = 'SELECT * FROM users WHERE localId=?'
+      conn.query(sql,req.body.username, function(err, results){
+        if(err) {
+
+        } else if(results.length>0){
+
+        } else {
+          hasher({password:req.body.password}, function(err, pass, salt, hash){
+            var user = {
+              localId: req.body.username,
+              password:hash,
+              salt:salt
+            };
+            var sql = 'UPDATE users SET ? WHERE id=?';
+            conn.query(sql, [user, req.user.id],function(err, results){
+              if(err){
+                console.log(err);
+                res.status(500);
+              } else if(results.changedRows!=1){
+                console.log(err);
+                res.status(500);
+              } else {
+                req.user.localId = user.localId;
+                req.user.password = user.password;
+                req.user.salt = user.salt;
+                //req.login(results[0], function(err){
+                req.session.save(function(){
+                  res.redirect('/profile');
+                });
+                //});
+              }
+            })
+          });
+        }
+      });
+    })
+
+    route.get('/link/oauth', function(req, res, next){
       var newuserString = req.flash('LinkRequired');
       if(newuserString.length!=0) {
         var newuser = JSON.parse(newuserString[0]);
         req.session.tempuser = newuser;
         req.session.save(function(){
-          res.render('./auth/link', {
+          res.render('./auth/link/oauth', {
             'user': req.user,
             'newuser': newuser
           });
@@ -54,7 +95,7 @@ module.exports = function(passport, conn){
         return res.redirect('/auth/login');
       }
     });
-    route.post('/link', function(req, res){
+    route.post('/link/oauth', function(req, res){
       if(req.session.tempuser){
         var sql = 'UPDATE users SET ? WHERE id=?';
         var newuser = {};
@@ -92,7 +133,7 @@ module.exports = function(passport, conn){
             return res.redirect('/auth/register/oauth');
           } else if(info.code == "LinkRequired"){
             req.flash('LinkRequired',JSON.stringify(info.newuser));
-            return res.redirect('/auth/link');
+            return res.redirect('/auth/link/oauth');
           } else {
             res.status(500);
             return res.redirect('/auth/login');
@@ -219,10 +260,7 @@ module.exports = function(passport, conn){
       }
     });
     route.get('/register', function(req, res){
-      var sql = 'SELECT id,title FROM topic';
-      conn.query(sql, function(err, topics, fields){
-        res.render('./auth/register',{topics:topics});
-      });
+      res.render('./auth/register');
     });
     route.post('/unregister', function(req, res){
       if(req.user){
