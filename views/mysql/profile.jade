@@ -6,28 +6,32 @@ block layout
     |local id/password: 
     if user.localId
       |linked
-      |&nbsp;unlink(미구현)
+      |&nbsp;
+      a(href="/auth/unlink?service=local") unlink
     else
       a(href="/auth/link/local") create
   p
     |facebook: 
     if user.facebookId
       |linked
-      |&nbsp;unlink(미구현)
+      |&nbsp;
+      a(href="/auth/unlink?service=facebook") unlink
     else
       a(href="/auth/facebook") link
   p
     |google: 
     if user.googleId
       |linked
-      |&nbsp;unlink(미구현)
+      |&nbsp;
+      a(href="/auth/unlink?service=google") unlink
     else
       a(href="/auth/google") link
   p
     |twitter: 
     if user.twitterId
       |linked
-      |&nbsp;unlink(미구현)
+      |&nbsp;
+      a(href="/auth/unlink?service=twitter") unlink
     else
       a(href="/auth/twitter") link
 

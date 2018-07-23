@@ -11,7 +11,7 @@ module.exports = function(passport, conn){
         message.errors = errors;
       }
       if(req.user){
-        res.redirect('/profile');
+        return res.redirect('/profile');
       }
       res.render('./auth/login',message);
     });
@@ -43,33 +43,7 @@ module.exports = function(passport, conn){
         'email'
       ]
     }));
-    route.get('/unlink', function(req, res){
-      switch(req.query.service){
-        case "local":
-          break;
-        case "facebook":
-          request({
-            uri: "https://graph.facebook.com/v3.0/" 
-              + req.user.facebookId 
-              + "/permissions?access_token=" 
-              + req.user.facebookAccessToken,
-            method: "DELETE",
-          }, function(error, res, body){
-            console.log(body);
-            var JSONResults = JSON.parse(body);
-            if(JSONResults.success && JSONResults.success == true){
-              req.user.facebookAccessToken = null;
-              req.user.facebookId = null;
-            }
-          });
-          break;
-        case "google":
-          break;
-        case "twitter":
-          break;
-        case "kakao":
-          break;
-      }
+    function updateUser(req, res){
       var sql = 'UPDATE users SET ? WHERE id=?';
       conn.query(sql, [req.user, req.user.id], function(err, results){
         if(err){
@@ -79,7 +53,101 @@ module.exports = function(passport, conn){
           res.redirect('/profile');
         }
       });
-    })
+    }
+    function returnToProfile(res, req){
+      res.status(500);
+      return res.redirect('/profile');
+    }
+    function unlinkLocal(req, res, successCallback, failureCallback){
+      if(!successCallback){
+        successCallback = updateUser;
+      }
+      if(!failureCallback){
+        failureCallback = returnToProfile;      
+      }
+      req.user.localId = null;
+      req.user.password = null;
+      req.user.salt = null;
+      successCallback(req, res);
+    }
+    function unlinkFacebook(req, res, successCallback, failureCallback){
+      if(!successCallback){
+        successCallback = updateUser;
+      }
+      if(!failureCallback){
+        failureCallback = returnToProfile;      
+      }
+      request({
+        uri: "https://graph.facebook.com/v3.0/" 
+          + req.user.facebookId 
+          + "/permissions?access_token=" 
+          + req.user.facebookAccessToken,
+        method: "DELETE",
+      }, function(error, request_res, body){
+        console.log(body);
+        var JSONResults = JSON.parse(body);
+        if(JSONResults.success && JSONResults.success == true){
+          req.user.facebookAccessToken = null;
+          req.user.facebookId = null;
+          successCallback(req, res);
+        } else {
+          failureCallback(res,req);
+        }
+      });
+    }
+    function unlinkGoogle(req, res, successCallback, failureCallback){
+      if(!successCallback){
+        successCallback = updateUser;
+      }
+      if(!failureCallback){
+        failureCallback = returnToProfile;      
+      }
+      request({
+        uri: "https://accounts.google.com/o/oauth2/revoke?token=" + req.user.googleAccessToken,
+        headers: {
+          "Content-type": "application/x-www-form-urlencoded"
+        }, 
+        method: "GET",
+      }, function(err, request_res, body){
+        console.log(request_res);
+        if(request_res.statusCode == 200){
+          req.user.googleAccessToken = null;
+          req.user.googleId = null;
+          successCallback(req, res);
+        } else {
+          failureCallback(res,req);
+        }
+      })
+    }
+    function unlinkTwitter(req, res, successCallback, failureCallback){
+      if(!successCallback){
+        successCallback = updateUser;
+      }
+      if(!failureCallback){
+        failureCallback = returnToProfile;      
+      }
+      req.user.twitterAccessToken = null;
+      req.user.twitterId = null;
+      successCallback(req, res);
+    }
+    route.get('/unlink', function(req, res){
+      switch(req.query.service){
+        case "local":
+          unlinkLocal(req, res);
+          break;
+        case "facebook":
+          unlinkFacebook(req, res);
+          break;
+        case "google":
+          unlinkGoogle(req, res);
+          break;
+        case "twitter": // revoke 불가, 그냥 레코드에서 삭제해야함
+          unlinkTwitter(req, res);
+          break;
+        case "kakao":
+          break;
+      }
+    });
     route.get('/link/local', function(req, res, next){
       res.render('./auth/link/local',{'user': req.user});
     })
@@ -294,22 +362,46 @@ module.exports = function(passport, conn){
     route.get('/register', function(req, res){
       res.render('./auth/register');
     });
+    function unregisterChainFacebook(req, res){
+      if(req.user.facebookId){
+        unlinkFacebook(req, res, unregisterChainGoogle)
+      } else {
+        unregisterChainGoogle(req, res);
+      }
+    }
+    function unregisterChainGoogle(req, res){
+      if(req.user.googleId){
+        unlinkGoogle(req, res, unregisterChainTwitter)
+      } else {
+        unregisterChainTwitter(req, res);
+      }
+    }
+    function unregisterChainTwitter(req, res){
+      if(req.user.twitterId){
+        unlinkTwitter(req, res, unregisterLast)
+      } else {
+        unregisterLast(req, res);
+      }
+    }
+    function unregisterLast(req, res){
+      var id = req.user.id;
+      var sql = 'DELETE FROM users WHERE id=?'
+      conn.query(sql, id, function(err, results){
+        if(err){
+          console.log(err);
+          res.status(500);
+        } else {
+          req.logout();
+          req.session.save(function(){
+            req.flash('unregister','Unregisted');
+            res.redirect('/topic');
+          })
+        }
+      });
+    }
     route.post('/unregister', function(req, res){
       if(req.user){
-        var id = req.user.id;
-        var sql = 'DELETE FROM users WHERE id=?'
-        conn.query(sql, id, function(err, results){
-          if(err){
-            console.log(err);
-            res.status(500);
-          } else {
-            req.logout();
-            req.session.save(function(){
-              req.flash('unregister','Unregisted');
-              res.redirect('/topic');
-            })
-          }
-        });
+        unregisterChainFacebook(req, res);
       } else {
         res.status(404);
       }
