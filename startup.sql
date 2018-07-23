@@ -18,9 +18,13 @@ CREATE TABLE users (
     salt VARCHAR(255), 
     email VARCHAR(50),
     facebookId VARCHAR(50),
+    facebookAccessToken VARCHAR(255),
     googleId VARCHAR(50),
+    googleAccessToken VARCHAR(255),
     twitterId VARCHAR(50),
+    twitterAccessToken VARCHAR(255),
     kakaoId VARCHAR(50),
+    kakaoAccessToken VARCHAR(255),
     PRIMARY KEY (id), 
     UNIQUE (id)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8;

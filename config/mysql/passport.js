@@ -82,6 +82,7 @@ module.exports = function(app, conn){
       console.log(profile);
       var newuser = {
         'facebookId':profile.id,
+        'facebookAccessToken': accessToken,
         'displayName':profile.displayName,
         'email':profile.emails[0].value,
       };
@@ -98,6 +99,7 @@ module.exports = function(app, conn){
       console.log(profile);
       var newuser = {
         'googleId':profile.id,
+        'googleAccessToken': accessToken,
         'displayName':profile.displayName,
         'email':profile.emails[0].value,
       };
@@ -115,6 +117,7 @@ module.exports = function(app, conn){
     console.log(profile);
     var newuser = {
       'twitterId':profile.id,
+      'twitterAccessToken': accessToken,
       'displayName': profile.displayName,
       // 'email': profile.emails[0].value, https://github.com/jaredhanson/passport-twitter/issues/67
     };

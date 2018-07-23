@@ -2,11 +2,16 @@ module.exports = function(passport, conn){
     var route = require('express').Router();
     var bkfd2Password = require("pbkdf2-password");
     var hasher = bkfd2Password();
+    var request = require('request');
+
     route.get('/login', function(req, res){
       var message = {};
       var errors = req.flash('error');
       if(errors){
         message.errors = errors;
+      }
+      if(req.user){
+        res.redirect('/profile');
       }
       res.render('./auth/login',message);
     });
@@ -38,6 +43,43 @@ module.exports = function(passport, conn){
         'email'
       ]
     }));
+    route.get('/unlink', function(req, res){
+      switch(req.query.service){
+        case "local":
+          break;
+        case "facebook":
+          request({
+            uri: "https://graph.facebook.com/v3.0/" 
+              + req.user.facebookId 
+              + "/permissions?access_token=" 
+              + req.user.facebookAccessToken,
+            method: "DELETE",
+          }, function(error, res, body){
+            console.log(body);
+            var JSONResults = JSON.parse(body);
+            if(JSONResults.success && JSONResults.success == true){
+              req.user.facebookAccessToken = null;
+              req.user.facebookId = null;
+            }
+          });
+          break;
+        case "google":
+          break;
+        case "twitter":
+          break;
+        case "kakao":
+          break;
+      }
+      var sql = 'UPDATE users SET ? WHERE id=?';
+      conn.query(sql, [req.user, req.user.id], function(err, results){
+        if(err){
+          console.log(err);
+          res.status(500);
+        } else {
+          res.redirect('/profile');
+        }
+      });
+    })
     route.get('/link/local', function(req, res, next){
       res.render('./auth/link/local',{'user': req.user});
     })
@@ -101,10 +143,13 @@ module.exports = function(passport, conn){
         var newuser = {};
         if(req.session.tempuser.facebookId){
           newuser.facebookId = req.session.tempuser.facebookId;
+          newuser.facebookAccessToken = req.session.tempuser.facebookAccessToken;
         } else if(req.session.tempuser.googleId){
           newuser.googleId = req.session.tempuser.googleId;
+          newuser.googleAccessToken = req.session.tempuser.googleAccessToken;
         } else if(req.session.tempuser.twitterId){
           newuser.twitterId = req.session.tempuser.twitterId;
+          newuser.twitterAccessToken = req.session.tempuser.twitterAccessToken;
         }
         delete req.session['tempuser'];
         conn.query(sql, [newuser, req.user.id], function(err, results){
@@ -226,22 +271,9 @@ module.exports = function(passport, conn){
     route.post('/register/oauth', function(req, res){
       if(req.session.tempuser){
         var sql = 'INSERT INTO users SET ?';
-        // var newuser = {
-        //   'authId': req.session.tempauthId,
-        //   'displayName': req.body.displayName,
-        //   'email': req.body.email
-        // };
-        var newuser = {
-          'displayName': req.body.displayName,
-          'email': req.body.email 
-        };
-        if(req.session.tempuser.facebookId){
-          newuser.facebookId = req.session.tempuser.facebookId;
-        } else if(req.session.tempuser.googleId){
-          newuser.googleId = req.session.tempuser.googleId;
-        } else if(req.session.tempuser.twitterId){
-          newuser.twitterId = req.session.tempuser.twitterId;
-        }
+        var newuser = req.session.tempuser;
+        newuser.displayName = req.body.displayName;
+        newuser.email = req.body.email;
         delete req.session['tempuser'];
         conn.query(sql, newuser, function(err, results){
           if(err){
