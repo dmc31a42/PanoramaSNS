@@ -4,6 +4,7 @@ module.exports = function(app, conn){
   var FacebookStrategy = require('passport-facebook').Strategy;
   var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
   var TwitterStrategy = require('passport-twitter').Strategy;
+  var KakaoStrategy = require('passport-kakao').Strategy;
   var bkfd2Password = require("pbkdf2-password");
   var hasher = bkfd2Password();
   var fs = require('fs');
@@ -123,6 +124,20 @@ module.exports = function(app, conn){
     };
     var sql = 'SELECT * from users WHERE twitterId=?';
     conn.query(sql, newuser.twitterId, OAuthStrategy(req, done, newuser));
+  }));
+  passport.use(new KakaoStrategy({
+    clientID: SERVER_CONFIG.KAKAO.clientID,
+    callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/kakao/callback",
+    passReqToCallback: true,
+  }, function(req, accessToken, refreshToken, profile, done){
+    console.log(profile);
+    var newuser = {
+      'kakaoId': profile.id,
+      'kakaoAccessToken': accessToken,
+      'displayName': profile.username,
+    };
+    var sql = 'SELECT * from users WHERE kakaoId=?';
+    conn.query(sql, newuser.kakaoId, OAuthStrategy(req, done, newuser));
   }))
   return passport;
 }

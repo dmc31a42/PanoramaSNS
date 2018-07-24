@@ -11,6 +11,8 @@ block layout
         |google&nbsp;
       if user.twitterId
         |twitter&nbsp;
+      if user.kakaoId
+        |kakao&nbsp;
     p
       |신규&nbsp;
       if newuser.facebookId
@@ -19,5 +21,7 @@ block layout
         |google
       if newuser.twitterId
         |twitter
+      if newuser.kakaoId
+        |kakao&nbsp;
     p
       input(type="submit")

@@ -34,5 +34,13 @@ block layout
       a(href="/auth/unlink?service=twitter") unlink
     else
       a(href="/auth/twitter") link
+  p
+    |kakao: 
+    if user.kakaoId
+      |linked
+      |&nbsp;
+      a(href="/auth/unlink?service=kakao") unlink
+    else
+      a(href="/auth/kakao") link
 
     

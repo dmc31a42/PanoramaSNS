@@ -130,6 +130,30 @@ module.exports = function(passport, conn){
       req.user.twitterId = null;
       successCallback(req, res);
     }
+    function unlinkKakao(req, res, successCallback, failureCallback){
+      if(!successCallback){
+        successCallback = updateUser;
+      }
+      if(!failureCallback){
+        failureCallback = returnToProfile;      
+      }
+      request({
+        uri: "https://kapi.kakao.com/v1/user/unlink",
+        headers: {
+          "Authorization": "Bearer " + req.user.kakaoAccessToken
+        }, 
+        method: "POST",
+      }, function(err, request_res, body){
+        console.log(request_res);
+        if(request_res.statusCode == 200){
+          req.user.kakaoAccessToken = null;
+          req.user.kakaoId = null;
+          successCallback(req, res);
+        } else {
+          failureCallback(res,req);
+        }
+      })
+    }
     route.get('/unlink', function(req, res){
       switch(req.query.service){
         case "local":
@@ -145,6 +169,7 @@ module.exports = function(passport, conn){
           unlinkTwitter(req, res);
           break;
         case "kakao":
+          unlinkKakao(req, res);
           break;
       }
     });
@@ -218,6 +243,9 @@ module.exports = function(passport, conn){
         } else if(req.session.tempuser.twitterId){
           newuser.twitterId = req.session.tempuser.twitterId;
           newuser.twitterAccessToken = req.session.tempuser.twitterAccessToken;
+        } else if(req.session.tempuser.kakaoId){
+          newuser.kakaoId = req.session.tempuser.kakaoId;
+          newuser.kakaoAccessToken = req.session.tempuser.kakaoAccessToken;
         }
         delete req.session['tempuser'];
         conn.query(sql, [newuser, req.user.id], function(err, results){
@@ -289,6 +317,12 @@ module.exports = function(passport, conn){
     route.get('/twitter/callback', function(req, res, next) {
       passport.authenticate('twitter', OAuthCallback(req, res, next))(req, res, next);
     });
+    route.get('/kakao', passport.authenticate('kakao', {
+
+    }));
+    route.get('/kakao/callback', function(req, res, next){
+      passport.authenticate('kakao', OAuthCallback(req, res, next))(req, res, next);
+    })
     route.post('/register', function(req, res){
       hasher({password:req.body.password}, function(err, pass, salt, hash){
         var user = {
@@ -379,6 +413,13 @@ module.exports = function(passport, conn){
     function unregisterChainTwitter(req, res){
       if(req.user.twitterId){
         unlinkTwitter(req, res, unregisterLast)
+      } else {
+        unregisterChainKakao(req, res);
+      }
+    }
+    function unregisterChainKakao(req, res){
+      if(req.user.kakaoId){
+        unlinkKakao(req, res, unregisterLast)
       } else {
         unregisterLast(req, res);
       }
