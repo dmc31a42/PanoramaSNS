@@ -1,0 +1,8 @@
+extends layout
+block layout
+  form(action='/upload' method='post' enctype="multipart/form-data")
+    input(type='file' name='userfile')
+    input(type='submit')
+  if images
+    for image in images
+      a(href='/view/' + image)=image

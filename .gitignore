@@ -88,3 +88,5 @@ typings/
 
 sessions/
 config/mysql/config.json
+uploads/*
+!uploads/ThisFolderMustExist.txt

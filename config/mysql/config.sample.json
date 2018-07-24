@@ -12,7 +12,7 @@
         "consumerSecret": "consumerSecret"
     },
     "KAKAO":{
-        "clientID": "99e5ae5ea7606291c00b31829db5aa56"
+        "clientID": "clientID"
     },
     "MYSQL":{
         "ConnectionFlags": {

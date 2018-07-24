@@ -28,3 +28,8 @@ CREATE TABLE users (
     PRIMARY KEY (id), 
     UNIQUE (id)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE images (
+  filename VARCHAR(255) NOT NULL,
+  userId INT NOT NULL
+)
