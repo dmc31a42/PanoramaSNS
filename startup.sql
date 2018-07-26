@@ -29,7 +29,23 @@ CREATE TABLE users (
     UNIQUE (id)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE images (
+CREATE TABLE post (
+  id INT NOT NULL AUTO_INCREMENT,
+  filename VARCHAR(255),
+  createTime datetime NOT NULL,
+  imgurURL VARCHAR(255),
+  userId INT NOT NULL,
+  permission VARCHAR(255),
+  tempImageId INT,
+  PRIMARY KEY (id),
+  UNIQUE (id)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE tempImage (
+  id INT NOT NULL AUTO_INCREMENT,
   filename VARCHAR(255) NOT NULL,
-  userId INT NOT NULL
-)
+  createTime datetime NOT NULL,
+  expiredTime datetime NOT NULL, 
+  PRIMARY KEY (id),
+  UNIQUE (id)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8;
