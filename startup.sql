@@ -31,6 +31,8 @@ CREATE TABLE users (
 
 CREATE TABLE post (
   id INT NOT NULL AUTO_INCREMENT,
+  title VARCHAR(255),
+  description VARCHAR(255),
   filename VARCHAR(255),
   createTime datetime NOT NULL,
   imgurURL VARCHAR(255),

@@ -12,6 +12,7 @@ var route_upload = require('./routes/mysql/upload')(conn);
 app.use('/upload', route_upload);
 var route_view = require('./routes/mysql/view')(conn);
 app.use('/view', route_view);
+app.use('/post', require('./routes/mysql/post')(conn));
 app.listen(3000, function(){
   console.log('Connected, 3000 port!');
 })

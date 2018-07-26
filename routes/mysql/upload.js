@@ -22,22 +22,24 @@ module.exports = function(conn){
   })
   route.post('/', upload.single('userfile'), function(req, res){
     console.log(req.file);
-    var sql = 'INSERT INTO tempImage SET ?';
-    var createTime = new Date();
-    var expiredTerm = 1*60*60*1000;
-    var expiredTime = new Date(createTime.getTime()+expiredTerm);
-    var tempImage = {
+    var tempPost = {
+      title: "",
+      description: "",
       filename: req.file.filename,
-      createTime: createTime,
-      expiredTime: expiredTime
+      createTime: new Date(),
+      userid: req.user.id,
+      permission: 'temp',
+      tempImageId: null
     }
-    conn.query(sql, tempImage, function(err, results){
+    var sql = 'INSERT INTO post SET ?';
+    conn.query(sql, tempPost, function(err, results){
       if(err){
         return res.status(500);
       } else if(results.affectedRows!=1){
         return res.status(404);
       } else {
-        res.redirect('/view/' + results.insertId);
+        tempPost.id = results.insertId;
+        res.redirect('/post/edit/' + results.insertId);
       }
     });
     //res.send('Uploaded : ' + req.file.filename);
