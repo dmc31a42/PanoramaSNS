@@ -11,14 +11,14 @@ module.exports = function(conn){
     },
     filename: function(req, file, cb){
       crypto.pseudoRandomBytes(16, function(err, raw) {
-        cb(null, raw.toString('hex') + '.' + mime.extensions[file.mimetype]);
+        cb(null, raw.toString('hex') + '.' + mime.getExtension(file.mimetype));
       });
     }
   })
   var upload = multer({storage: storage});
 
   route.get('/',function(req, res){
-    res.render('./upload');
+    res.render('./upload', {user: req.user});
   })
   route.post('/', upload.single('userfile'), function(req, res){
     console.log(req.file);

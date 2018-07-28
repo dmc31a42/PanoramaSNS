@@ -28,7 +28,7 @@ module.exports = function(conn){
           if (file.indexOf(dir + path.sep) !== 0) {
             return res.status(403).end('Forbidden');
           }
-          var type = mime.types[path.extname(file).slice(1)] || 'text/plain';
+          var type = mime.getType(path.extname(file).slice(1)) || 'text/plain';
           var s = fs.createReadStream(file);
           s.on('open', function () {
             res.set('Content-Type', type);
