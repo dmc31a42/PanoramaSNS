@@ -1,0 +1,13 @@
+extends layout
+block layout
+  artcle
+    
+    form(action='/post/'+topic.id+'/edit' method='post')
+      p
+        input(type='text' name='title' value=post.title placeholder='title')
+      p
+        textarea(name='description' placeholder='description')
+          =post.description
+      p=author
+      p
+        input(type='submit')

@@ -39,7 +39,7 @@ module.exports = function(conn){
         return res.status(404);
       } else {
         tempPost.id = results.insertId;
-        res.redirect('/post/edit/' + results.insertId);
+        res.redirect('/post/' + results.insertId + '/edit');
       }
     });
     //res.send('Uploaded : ' + req.file.filename);
