@@ -5,9 +5,6 @@ module.exports = function(conn){
   var route = require('express').Router();  
   var crypto = require('crypto');
   var mime = require('mime');
-  route.get('/:id', function(req, res){
-    
-  });
 
   function createTempImage(conn, req, res, post){
     var now = new Date();
@@ -35,7 +32,7 @@ module.exports = function(conn){
     });
   }
 
-  route.get('/:id/edit', function(req, res){
+  route.get('/:id', function(req, res){
     var sql = 'SELECT * from post WHERE id=?';
     conn.query(sql, req.params.id, function(err, results){
       console.log(results);
@@ -59,7 +56,7 @@ module.exports = function(conn){
                 conn.query('DELETE from tempImage WHERE id=?', tempImage.id);
                 createTempImage(conn, req, res, post);
               } else {
-                res.render('./post/edit', {
+                res.render('./share', {
                   'post': post,
                   'tempImage': tempImage,
                   'user': req.user

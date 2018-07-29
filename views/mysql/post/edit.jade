@@ -1,19 +1,29 @@
 extends ../layout
 block layout
-  artcle
-    //img.image(src= '/images/' + tempImage.id)
+  article
     div#panorama
-    script
-      |pannellum.viewer('panorama', {
-      |  "type": "equirectangular",
-      |  "panorama": "#{'/images/' + tempImage.id}"
-      |});
+    script(type='text/javascript').
+      pannellum.viewer('panorama', {
+        "type": "equirectangular",
+        "panorama": "#{'/images/' + tempImage.id}",
+        "autoLoad": true,
+        "author": "#{user.displayName}"
+      });
+      $().ready(() => {
+        $('#title').on('input', function(event){
+          $('.pnlm-panorama-info').css('display','block');
+          $('.pnlm-title-box').text($('#title').val());
+        })
+      })     
+    style.
+      #panorama {
+        height: 600px;
+      }
     form(action='/post/'+post.id+'/edit' method='post')
       p
-        input(type='text' name='title' value=post.title placeholder='title')
+        input(id='title' type='text' name='title' value=post.title placeholder='title')
       p
-        textarea(name='description' placeholder='description')
-          =post.description
+        textarea(id='description' name='description' placeholder='description')=post.description
       p=user.displayName
       p
         input(type='submit')

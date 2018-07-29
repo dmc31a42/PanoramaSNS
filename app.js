@@ -14,6 +14,8 @@ var route_view = require('./routes/mysql/images')(conn);
 app.use('/images', route_view);
 var route_post = require('./routes/mysql/post')(conn);
 app.use('/post', route_post);
+var route_share = require('./routes/mysql/share')(conn);
+app.use('/s', route_share);
 app.listen(3000, function(){
   console.log('Connected, 3000 port!');
 })
