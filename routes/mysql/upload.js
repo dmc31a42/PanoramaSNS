@@ -1,4 +1,5 @@
 module.exports = function(conn){
+  var exec = require('child_process').exec;
   var path = require('path');
   var dir = path.join(__dirname, 'public');
   var route = require('express').Router();
@@ -31,20 +32,31 @@ module.exports = function(conn){
       permission: 'temp',
       tempImageId: null
     }
-    var sql = 'INSERT INTO post SET ?';
-    conn.query(sql, tempPost, function(err, results){
-      if(err){
-        return res.status(500);
-      } else if(results.affectedRows!=1){
-        return res.status(404);
-      } else {
-        tempPost.id = results.insertId;
-        res.redirect('/post/' + results.insertId + '/edit');
+    exec('python generate.py ../../uploads/' 
+      + req.file.filename 
+      + ' -n "C:/program Files/Hugin/bin/nona.exe"'
+      + ' -o ../../uploads/'
+      + req.file.filename.replace("." + mime.getExtension(req.file.mimetype), "")
+      + '/ >> log.log',{
+        'encoding': 'euc-kr'
+      }, function(err, stdout, stderr){
+        if(err){
+          return res.status(500);
+        } else {
+          var sql = 'INSERT INTO post SET ?';
+          conn.query(sql, tempPost, function(err, results){
+            if(err){
+              return res.status(500);
+            } else if(results.affectedRows!=1){
+              return res.status(404);
+            } else {
+              tempPost.id = results.insertId;
+              res.redirect('/post/' + results.insertId + '/edit');
+            }
+          });
+        }
       }
-    });
-    //res.send('Uploaded : ' + req.file.filename);
-    
+    );
   });
-
   return route;
 }
