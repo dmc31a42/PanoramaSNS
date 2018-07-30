@@ -3,13 +3,12 @@ block layout
   article
     div#panorama
     script(type='text/javascript').
-      pannellum.viewer('panorama', {
-        "type": "equirectangular",
-        "panorama": "#{'/images/' + tempImage.id}",
-        "autoLoad": true,
-        "author": "#{user.displayName}"
-      });
+      
       $().ready(() => {
+        var canvas = document.createElement("canvas");
+        var gl = canvas.getContext("webgl");
+        console.log(gl.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE))
+        pannellum.viewer('panorama', !{multiResConfig});
         $('#title').on('input', function(event){
           $('.pnlm-panorama-info').css('display','block');
           $('.pnlm-title-box').text($('#title').val());

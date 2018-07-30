@@ -32,13 +32,13 @@ module.exports = function(conn){
       permission: 'temp',
       tempImageId: null
     }
-    exec('python generate.py ../../uploads/' 
+    exec('python generate.py ./uploads/' 
       + req.file.filename 
       + ' -n "C:/program Files/Hugin/bin/nona.exe"'
-      + ' -o ../../uploads/'
+      + ' -o ./uploads/'
       + req.file.filename.replace("." + mime.getExtension(req.file.mimetype), "")
       + '/ >> log.log',{
-        'encoding': 'euc-kr'
+        'encoding': 'utf8'
       }, function(err, stdout, stderr){
         if(err){
           return res.status(500);

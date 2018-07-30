@@ -5,11 +5,12 @@ module.exports = function(conn){
   var route = require('express').Router();  
   var crypto = require('crypto');
   var mime = require('mime');
+  var fs = require('fs');
   route.get('/:id', function(req, res){
     
   });
 
-  function createTempImage(conn, req, res, post){
+  function createTempImage(conn, req, res, post, callback){
     var now = new Date();
     var sql = 'INSERT INTO tempImage SET ?';
     tempImage = {
@@ -26,11 +27,7 @@ module.exports = function(conn){
         tempImage.id = results.insertId;
         post.tempImageId = tempImage.id;
         conn.query('UPDATE post SET ? WHERE id=?',[post, post.id]);
-        res.render('./post/edit', {
-          'post': post,
-          'tempImage': tempImage,
-          'user': req.user
-        });
+        callback(req.user, post, tempImage);
       }
     });
   }
@@ -57,18 +54,54 @@ module.exports = function(conn){
               var now = new Date();
               if(tempImage.expiredTime.getTime() - now.getTime() - 10*60*1000 < 0){
                 conn.query('DELETE from tempImage WHERE id=?', tempImage.id);
-                createTempImage(conn, req, res, post);
-              } else {
-                res.render('./post/edit', {
-                  'post': post,
-                  'tempImage': tempImage,
-                  'user': req.user
+                createTempImage(conn, req, res, post, function(user, post, tempImage){
+                  fs.readFile(path.join(dir, path.basename(post.filename, path.extname(post.filename)) + '/config.json'), function(err, data){
+                    var multiResConfig = JSON.parse(data);
+                    multiResConfig.basePath = '/images/' + tempImage.id + '/multires';
+                    multiResConfig.autoLoad = true;
+                    multiResConfig.author = user.displayName;
+                    delete multiResConfig.hfov;
+                    res.render('./post/edit', {
+                      'post': post,
+                      'tempImage': tempImage,
+                      'user': user,
+                      'multiResConfig': JSON.stringify(multiResConfig)
+                    });
+                  });                  
                 });
+              } else {
+                fs.readFile(path.join(dir, path.basename(post.filename, path.extname(post.filename)) + '/config.json'), function(err, data){
+                  var multiResConfig = JSON.parse(data);
+                  multiResConfig.basePath = '/images/' + tempImage.id + '/multires';
+                  multiResConfig.autoLoad = true;
+                  multiResConfig.author = req.user.displayName;
+                  delete multiResConfig.hfov;
+                  res.render('./post/edit', {
+                    'post': post,
+                    'tempImage': tempImage,
+                    'user': req.user,
+                    'multiResConfig': JSON.stringify(multiResConfig)
+                  });
+                });   
               }
             }
           })
         } else {
-          createTempImage(conn, req, res, post);
+          createTempImage(conn, req, res, post, function(user, post, tempImage){
+            fs.readFile(path.join(dir, path.basename(post.filename, path.extname(post.filename)) + '/config.json'), function(err, data){
+              var multiResConfig = JSON.parse(data);
+              multiResConfig.basePath = '/images/' + tempImage.id + '/multires';
+              multiResConfig.autoLoad = true;
+              multiResConfig.author = user.displayName;
+              delete multiResConfig.hfov;
+              res.render('./post/edit', {
+                'post': post,
+                'tempImage': tempImage,
+                'user': user,
+                'multiResConfig': JSON.stringify(multiResConfig)
+              });
+            });   
+          });
         }
       }
     })
