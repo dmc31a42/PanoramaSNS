@@ -14,11 +14,11 @@ module.exports = function(app, conn){
   app.use(passport.session());
   
   passport.serializeUser(function(user, done) {
-    console.log('serializeUser', user);
+    //console.log('serializeUser', user);
     done(null, user.id);
   });
   passport.deserializeUser(function(id, done) {
-    console.log('deserializeUser', id);
+    //console.log('deserializeUser', id);
     var sql = 'SELECT * from users WHERE id=?';
     conn.query(sql, id, function(err, results){
       if(err){

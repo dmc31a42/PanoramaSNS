@@ -32,7 +32,7 @@ module.exports = function(conn){
   }
   route.get('/:id',function(req, res){
     checkVaild(req, res, function(result){
-      var file = path.join(dir + '/' + results[0].filename);
+      var file = path.join(dir + '/' + result.filename);
       if (file.indexOf(dir + path.sep) !== 0) {
         return res.status(403).end('Forbidden');
       }
