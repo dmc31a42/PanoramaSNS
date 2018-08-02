@@ -1,0 +1,21 @@
+extends ../layout
+block layout
+  if errors
+    each error in errors
+      li=error
+  h1 Login
+  form(action="/auth/login", method="post")
+    p
+      input(type="text", name="username", placeholder="username")   
+    p
+      input(type="password", name="password", placeholder="password")   
+    p
+      input(type="submit")
+    p
+      a(href="/auth/facebook") facebook
+    p
+      a(href="/auth/google") google
+    p
+      a(href="/auth/twitter") twitter
+    p
+      a(href="/auth/kakao") kakao

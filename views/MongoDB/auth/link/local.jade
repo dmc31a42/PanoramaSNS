@@ -1,0 +1,21 @@
+extends ../../layout
+block layout
+  form(action="/auth/link/local", method="post")
+    p
+      |기존&nbsp;
+      if user.facebookId
+        |facebook&nbsp;
+      if user.googleId
+        |google&nbsp;
+      if user.twitterId
+        |twitter&nbsp;
+      if user.kakaoId
+        |kakaoId&nbsp;
+    p
+      |신규&nbsp;
+      p
+        input(type="text", name="username", placeholder="username")
+      p
+        input(type="password", name="password", placeholder="password")
+    p
+      input(type="submit")

@@ -1,0 +1,23 @@
+extends ../layout
+block layout
+  article
+    div#panorama
+    script(type='text/javascript').
+      
+      $().ready(() => {
+        var canvas = document.createElement("canvas");
+        var gl = canvas.getContext("webgl");
+        console.log(gl.getParameter(WebGLRenderingContext.MAX_TEXTURE_SIZE))
+        pannellum.viewer('panorama', !{multiResConfig});
+        $('#title').on('input', function(event){
+          $('.pnlm-panorama-info').css('display','block');
+          $('.pnlm-title-box').text($('#title').val());
+        })
+      })     
+    style.
+      #panorama {
+        height: 600px;
+      }
+    p=post.title
+    p=post.description
+    p=user.displayName

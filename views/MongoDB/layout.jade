@@ -1,0 +1,33 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    link(rel='stylesheet' href='https://cdn.pannellum.org/2.4/pannellum.css')
+    script(src='https://cdn.pannellum.org/2.4/pannellum.js')
+    script(src='https://code.jquery.com/jquery-3.3.1.js')
+    script(type='text/javascript').
+      var test;
+  body
+    if messages
+      for message in messages
+        a.alert(class='alert-' + message)
+          p= message
+    ul#account
+      if user
+        li
+          p
+            a(href='/auth/logout') Logout,
+            |&nbsp;
+            a(href='/profile')=user.displayName
+          p
+            form(action="/auth/unregister", method="post") 
+              p 
+                input(type="submit")
+      else
+        li
+          a(href='/auth/register') Register
+        li
+          a(href='/auth/login') Login
+    h1
+      a(href='/topic') Server Side JavaScript
+    block layout

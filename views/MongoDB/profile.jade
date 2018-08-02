@@ -1,0 +1,46 @@
+extends layout
+block layout
+  p 사용자명: #{user.displayName}
+  p 이메일 : #{user.email}
+  p
+    |local id/password: 
+    if user.localId
+      |linked
+      |&nbsp;
+      a(href="/auth/unlink?service=local") unlink
+    else
+      a(href="/auth/link/local") create
+  p
+    |facebook: 
+    if user.facebookId
+      |linked
+      |&nbsp;
+      a(href="/auth/unlink?service=facebook") unlink
+    else
+      a(href="/auth/facebook") link
+  p
+    |google: 
+    if user.googleId
+      |linked
+      |&nbsp;
+      a(href="/auth/unlink?service=google") unlink
+    else
+      a(href="/auth/google") link
+  p
+    |twitter: 
+    if user.twitterId
+      |linked
+      |&nbsp;
+      a(href="/auth/unlink?service=twitter") unlink
+    else
+      a(href="/auth/twitter") link
+  p
+    |kakao: 
+    if user.kakaoId
+      |linked
+      |&nbsp;
+      a(href="/auth/unlink?service=kakao") unlink
+    else
+      a(href="/auth/kakao") link
+
+    

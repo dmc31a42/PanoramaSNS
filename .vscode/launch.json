@@ -20,5 +20,11 @@
             "console": "internalConsole",
             "internalConsoleOptions": "neverOpen"
         },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program mongoDBtest.js",
+            "program": "${workspaceFolder}/mongoDBtest.js"
+        },
     ]
 }

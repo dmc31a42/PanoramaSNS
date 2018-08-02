@@ -1,0 +1,16 @@
+extends ../../layout
+block layout
+  h1 OAuth Register
+  form(action="/auth/register/oauth", method="post")
+    if newuser.facebookId
+      |facebook
+    if newuser.googleId
+      |google
+    if newuser.twitterId
+      |twitter
+    p
+      input(type="text", name="displayName", value=newuser.displayName)
+    p
+      input(type="text", name="email", value=newuser.email)
+    p
+      input(type="submit")
