@@ -12,16 +12,15 @@ module.exports = function(passport){
     route.get('/register', function(req, res){
       res.render('./auth/register');
     });
+
     route.post('/register', function(req, res){
       hasher({password:req.body.password}, function(err, pass, salt, hash){
-        User.find({
-          local: {
-            id: req.body.username
-          }
+        User.findOne({
+          'local.id': req.body.username
         })
         .then((user) =>{
           console.log(user);
-          if(user.length == 0) {
+          if(!user) {
             return User({
               displayName:req.body.displayName,
               local: {
@@ -37,26 +36,13 @@ module.exports = function(passport){
                 })
               })
             })
+          } else {
+            return Promise.reject('There is user already');
           }
         }).catch((err)=>{
           res.status(500);
           res.json(err);
         })
-
-        // var sql = 'INSERT INTO users SET ?';
-        // conn.query(sql, user,function(err, results){
-        //   if(err){
-        //     console.log(err);
-        //     res.status(500);
-        //   } else {
-        //     user.id = results.insertId;
-        //     req.login(user, function(err){
-        //       req.session.save(function(){
-        //         res.redirect('/topic');
-        //       });
-        //     });
-        //   }
-        // })
       });
     });
     // route.get('/register/oauth',function(req,res){
@@ -105,40 +91,34 @@ module.exports = function(passport){
     //   }
     // });
 
+    // [[ login ]]
+    route.get('/login', function(req, res){
+      if(req.user){
+        return res.redirect('/profile');
+      }
+      res.render('./auth/login');
+    })
 
-    // route.get('/login', function(req, res){
-    //   var message = {};
-    //   var errors = req.flash('error');
-    //   if(errors){
-    //     message.errors = errors;
-    //   }
-    //   if(req.user){
-    //     return res.redirect('/profile');
-    //   }
-    //   res.render('./auth/login',message);
-    // });
-    // route.post(
-    //   '/login',
-    //   passport.authenticate(
-    //     'local',
-    //     {
-    //       //successRedirect: '/welcome',
-    //       failureRedirect: '/auth/login',
-    //       failureFlash: false
-    //     }
-    //   ),
-    //   function(req, res){
-    //     req.session.save(function(){
-    //       res.redirect('/topic');
-    //     })
-    //   }
-    // );
-    // route.get('/logout', function(req, res){
-    //   req.logout();
-    //   req.session.save(function(){
-    //     res.redirect('/topic');
-    //   });
-    // });
+    route.post('/login', passport.authenticate('local',
+      {
+        failureRedirect: '/auth/login',
+        failureFlash: false
+      }
+    ), function(req, res){
+      req.session.save(function(){
+        res.redirect('/profile');
+      })
+    });
+
+    
+    // [[logout]]
+    route.get('/logout', function(req, res){
+      req.logout();
+      req.session.save(function(){
+        res.redirect('/auth/login');
+      });
+    });
+
     // route.get('/facebook', passport.authenticate('facebook', {
     //   scope:
     //   [

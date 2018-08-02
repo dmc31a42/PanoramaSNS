@@ -21,8 +21,8 @@
 // })
 
 const SERVER_CONFIG = require('./config/MongoDB/config.json');
-const db = require('./config/MongoDB/db')();
 const app = require('./config/MongoDB/express')();
+const db = require('./config/MongoDB/db')();
 const passport = require('./config/MongoDB/passport')(app);
 
 var route_auth = require('./routes/MongoDB/auth')(passport);

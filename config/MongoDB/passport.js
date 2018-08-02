@@ -1,4 +1,4 @@
-module.exports = function(app, conn){
+module.exports = function(app){
   const passport = require('passport');
   const LocalStrategy = require('passport-local').Strategy;
   const FacebookStrategy = require('passport-facebook').Strategy;
@@ -14,40 +14,41 @@ module.exports = function(app, conn){
   // [[models]]
   const User = require('../../models/user').model;
   
-  // passport.serializeUser(function(user, done) {
-  //   //console.log('serializeUser', user);
-  //   done(null, user.id);
-  // });
-  // passport.deserializeUser(function(id, done) {
-  //   //console.log('deserializeUser', id);
-  //   var sql = 'SELECT * from users WHERE id=?';
-  //   conn.query(sql, id, function(err, results){
-  //     if(err){
-  //       done(err);
-  //     } else {
-  //       done(null, results[0]);
-  //     }
-  //   });
-  // });
+  passport.serializeUser(function(user, done) {
+    console.log('serializeUser', user);
+    done(null, user.id);
+  });
+  passport.deserializeUser(function(id, done) {
+    console.log('deserializeUser', id);
+    User.findById(id)
+    .then((user)=>{
+      done(null, user);
+    })
+    .catch((err)=>{
+      done(err);
+    })
+  });
   passport.use(new LocalStrategy(
     function(username, password, done){
       User.findOne({
-        local: {
-          id: username
-        }
+        'local.id': username
       })
       .then((user)=>{
         if(user) {
-
+          return hasher({password:password, salt:user.local.salt}, function(err, pass, salt, hash){
+            if(hash === user.local.password){
+              console.log('LocalStrategy', user);
+              return done(null, user);
+            } else {
+              return done(null, false);
+            }
+          })
         } else {
-          // promise catch
-          res.status(500);
-          return res.json({err: 'There is no user'})
+          return done(null, false);
         }
       })
       .catch((err)=>{
-        res.status(500);
-        return res.json(err);
+        return done(err);
       })
       // var uname = username;
       // var pwd = password;
