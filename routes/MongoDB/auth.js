@@ -45,51 +45,46 @@ module.exports = function(passport){
         })
       });
     });
-    // route.get('/register/oauth',function(req,res){
-    //   var newuserString = req.flash('RegisterRequired');
-    //   if(newuserString.length!=0){
-    //     var newuser = JSON.parse(newuserString[0]);
-    //     req.session.tempuser = newuser;
-    //     req.session.save(function(){
-    //       var user = newuser;
-    //       if(!user.displayName){
-    //         user.displayName = "";
-    //       }
-    //       if(!user.email){
-    //         user.email = "";
-    //       }
-    //       res.render('./auth/register/oauth',{
-    //         'newuser':user
-    //       });
-    //     })
-    //   } else {
-    //     res.status(404);
-    //     return res.redirect('/auth/login');
-    //   }
-    // });
-    // route.post('/register/oauth', function(req, res){
-    //   if(req.session.tempuser){
-    //     var sql = 'INSERT INTO users SET ?';
-    //     var newuser = req.session.tempuser;
-    //     newuser.displayName = req.body.displayName;
-    //     newuser.email = req.body.email;
-    //     delete req.session['tempuser'];
-    //     conn.query(sql, newuser, function(err, results){
-    //       if(err){
-    //         console.log(err);
-    //         res.status(500);
-    //         res.redirect('/auth/login');
-    //       } else {
-    //         newuser.id = results.insertId;
-    //         req.login(newuser, function(err){
-    //           req.session.save(function(){
-    //             res.redirect('/topic');
-    //           });
-    //         });
-    //       }
-    //     });
-    //   }
-    // });
+    route.get('/register/oauth',function(req,res){
+      var newuserString = req.flash('RegisterRequired');
+      if(newuserString.length!=0){
+        var newuser = JSON.parse(newuserString[0]);
+        req.session.tempuser = newuser;
+        req.session.save(function(){
+          // if(!user.displayName){
+          // }
+          // if(!user.email){
+          //   user.email = "";
+          // }
+          res.render('./auth/register/oauth',{
+            'newuser':newuser
+          });
+        })
+      } else {
+        res.status(404);
+        return res.redirect('/auth/login');
+      }
+    });
+    route.post('/register/oauth', function(req, res){
+      if(req.session.tempuser){
+        var newuser = req.session.tempuser;
+        newuser.displayName = req.body.displayName;
+        newuser.email = req.body.email;
+        delete req.session['tempuser'];
+        User.create(newuser)
+        .then((user)=>{
+          return req.logIn(user, function(err){
+            return req.session.save(function(){
+              return res.redirect('/profile');
+            })
+          })
+        })
+        .catch((err)=>{
+          res.status(500);
+          return res.json(err);
+        });
+      }
+    });
 
     // [[ login ]]
     route.get('/login', function(req, res){
@@ -119,12 +114,44 @@ module.exports = function(passport){
       });
     });
 
-    // route.get('/facebook', passport.authenticate('facebook', {
-    //   scope:
-    //   [
-    //     'email'
-    //   ]
-    // }));
+    // [[OAuth login]]
+    route.get('/facebook', passport.authenticate('facebook', {
+      scope:
+      [
+        'email'
+      ]
+    }));
+    route.get('/facebook/callback', function(req, res, next) {
+      passport.authenticate('facebook', OAuthCallback(req, res, next))(req, res, next);
+    });
+    function OAuthCallback(req, res, next){
+      return function OAuthCallback_internal(err, user, info){
+        if(info && info.code){
+          if(info.code == "RegisterRequired"){
+            req.flash('RegisterRequired',JSON.stringify(info.newuser));
+            return res.redirect('/auth/register/oauth');
+          } else if(info.code == "LinkRequired"){
+            req.flash('LinkRequired',JSON.stringify(info.newuser));
+            return res.redirect('/auth/link/oauth');
+          } else {
+            res.status(500);
+            return res.redirect('/auth/login');
+          }
+        } else if (err || !user) {
+          res.status(500);
+          return res.redirect('/auth/login');
+        } else{
+          req.logIn(user, function(err) {
+            if (err) { 
+              return res.redirect('/auth/login');
+            }
+            return req.session.save(function(){
+              res.redirect('/topic');
+            });
+          });
+        }
+      }
+    }
     // function updateUser(req, res){
     //   var sql = 'UPDATE users SET ? WHERE id=?';
     //   conn.query(sql, [req.user, req.user.id], function(err, results){
@@ -348,37 +375,6 @@ module.exports = function(passport){
     //     return res.redirect('/auth/login');
     //   }
     // })
-    // function OAuthCallback(req, res, next){
-    //   return function OAuthCallback_internal(err, user, info){
-    //     if(info && info.code){
-    //       if(info.code == "RegisterRequired"){
-    //         req.flash('RegisterRequired',JSON.stringify(info.newuser));
-    //         return res.redirect('/auth/register/oauth');
-    //       } else if(info.code == "LinkRequired"){
-    //         req.flash('LinkRequired',JSON.stringify(info.newuser));
-    //         return res.redirect('/auth/link/oauth');
-    //       } else {
-    //         res.status(500);
-    //         return res.redirect('/auth/login');
-    //       }
-    //     } else if (err || !user) {
-    //       res.status(500);
-    //       return res.redirect('/auth/login');
-    //     } else{
-    //       req.logIn(user, function(err) {
-    //         if (err) { 
-    //           return res.redirect('/auth/login');
-    //         }
-    //         return req.session.save(function(){
-    //           res.redirect('/topic');
-    //         });
-    //       });
-    //     }
-    //   }
-    // }
-    // route.get('/facebook/callback', function(req, res, next) {
-    //   passport.authenticate('facebook', OAuthCallback(req, res, next))(req, res, next);
-    // });
     // route.get('/google', passport.authenticate('google', {
     //   scope:
     //   [

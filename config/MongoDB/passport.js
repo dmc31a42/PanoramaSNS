@@ -50,67 +50,49 @@ module.exports = function(app){
       .catch((err)=>{
         return done(err);
       })
-      // var uname = username;
-      // var pwd = password;
-      // var sql = 'SELECT * from users WHERE localId=?';
-      // conn.query(sql, [uname],function(err,results){
-      //   console.log(results);
-      //   if(err){
-      //     return done(err);
-      //   } else if(results.length === 0) {
-      //     return done('There is no user');
-      //   } else {
-      //     var user = results[0];
-      //     return hasher({password:pwd, salt:user.salt}, function(err, pass, salt, hash){
-      //       if(hash === user.password){
-      //         console.log('LocalStrategy', user);
-      //         done(null, user);
-      //       } else {
-      //         done(null, false);
-      //       }
-      //     });
-      //   }
-      // })
     }
   ));
-  // function OAuthStrategy(req, done, newuser){
-  //   return function(err, results) {
-  //     if(err){
-  //       done(err);
-  //     } else if(results.length>0){
-  //       if(req.user){
-  //         done({'code':'AlreadyAccountExist'});
-  //       } else {
-  //         done(null, results[0]);
-  //       }
-  //     } else {
-  //       if(req.user){
-  //         done(null, req.user, {'code':"LinkRequired",'newuser':newuser});
-  //       } else {
-  //         done(null, null, {'code':"RegisterRequired",'newuser':newuser});
-  //       }
-  //     }
-  //   }
-  // }
-  // passport.use(new FacebookStrategy({
-  //     clientID: SERVER_CONFIG.FACEBOOK.FACEBOOK_APP_ID,
-  //     clientSecret: SERVER_CONFIG.FACEBOOK.FACEBOOK_APP_SECRET,
-  //     callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/facebook/callback",
-  //     profileFields:['id', 'email','name', 'displayName'],
-  //     passReqToCallback: true
-  //   },
-  //   function(req, accessToken, refreshToken, profile, done) {
-  //     console.log(profile);
-  //     var newuser = {
-  //       'facebookId':profile.id,
-  //       'facebookAccessToken': accessToken,
-  //       'displayName':profile.displayName,
-  //       'email':profile.emails[0].value,
-  //     };
-  //     var sql = 'SELECT * from users WHERE facebookId=?';
-  //     conn.query(sql, newuser.facebookId, OAuthStrategy(req, done, newuser));
-  //   }
-  // ));
+  function OAuthStrategy(req, done, user, newuser){
+    if(user) {
+      if(req.user){
+        return done({'code': 'AlreadyAccountExist'});
+      } else {
+        return done(null, user);
+      }
+    } else {
+      if(req.user) {
+        return done(null, req.user, {'code': "LinkRequired", 'newuser': newuser});
+      } else {
+        return done(null, req.user, {'code': "RegisterRequired", 'newuser': newuser});
+      }
+    }
+  }
+  passport.use(new FacebookStrategy({
+      clientID: SERVER_CONFIG.FACEBOOK.FACEBOOK_APP_ID,
+      clientSecret: SERVER_CONFIG.FACEBOOK.FACEBOOK_APP_SECRET,
+      callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/facebook/callback",
+      profileFields:['id', 'email','name', 'displayName'],
+      passReqToCallback: true
+    },
+    function(req, accessToken, refreshToken, profile, done) {
+      console.log(profile);
+      var newuser = {
+        displayName: profile.displayName,
+        email: profile.emails[0].value,
+        facebook: {
+          id: profile.id,
+          accessToken: accessToken
+        }
+      };
+      User.findOne({'facebook.id': profile.id})
+      .then((user)=>{
+        return OAuthStrategy(req, done, user, newuser);
+      })
+      .catch((err)=>{
+        return done(err);
+      })
+    }
+  ));
   // passport.use(new GoogleStrategy({
   //     clientID: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_ID,
   //     clientSecret: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_SECRET,
