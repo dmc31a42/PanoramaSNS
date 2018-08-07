@@ -4,7 +4,7 @@ block layout
   p 이메일 : #{user.email}
   p
     |local id/password: 
-    if user.localId
+    if user.local.id
       |linked
       |&nbsp;
       a(href="/auth/unlink?service=local") unlink
@@ -12,7 +12,7 @@ block layout
       a(href="/auth/link/local") create
   p
     |facebook: 
-    if user.facebookId
+    if user.facebook.id
       |linked
       |&nbsp;
       a(href="/auth/unlink?service=facebook") unlink
@@ -20,7 +20,7 @@ block layout
       a(href="/auth/facebook") link
   p
     |google: 
-    if user.googleId
+    if user.google.id
       |linked
       |&nbsp;
       a(href="/auth/unlink?service=google") unlink
@@ -28,7 +28,7 @@ block layout
       a(href="/auth/google") link
   p
     |twitter: 
-    if user.twitterId
+    if user.twitter.id
       |linked
       |&nbsp;
       a(href="/auth/unlink?service=twitter") unlink
@@ -36,7 +36,7 @@ block layout
       a(href="/auth/twitter") link
   p
     |kakao: 
-    if user.kakaoId
+    if user.kakao.id
       |linked
       |&nbsp;
       a(href="/auth/unlink?service=kakao") unlink

@@ -27,6 +27,8 @@ const passport = require('./config/MongoDB/passport')(app);
 
 var route_auth = require('./routes/MongoDB/auth')(passport);
 app.use('/auth/', route_auth);
+var route_profile = require('./routes/MongoDB/profile')();
+app.use('/profile/', route_profile);
 app.listen(SERVER_CONFIG.HOST.port, function(){
   console.log('Connected, ' + SERVER_CONFIG.HOST.port + ' port!');
 })

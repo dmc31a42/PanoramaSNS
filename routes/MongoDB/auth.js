@@ -86,6 +86,9 @@ module.exports = function(passport){
       }
     });
 
+    // [[unregister]]
+
+
     // [[ login ]]
     route.get('/login', function(req, res){
       if(req.user){
@@ -115,15 +118,6 @@ module.exports = function(passport){
     });
 
     // [[OAuth login]]
-    route.get('/facebook', passport.authenticate('facebook', {
-      scope:
-      [
-        'email'
-      ]
-    }));
-    route.get('/facebook/callback', function(req, res, next) {
-      passport.authenticate('facebook', OAuthCallback(req, res, next))(req, res, next);
-    });
     function OAuthCallback(req, res, next){
       return function OAuthCallback_internal(err, user, info){
         if(info && info.code){
@@ -146,12 +140,52 @@ module.exports = function(passport){
               return res.redirect('/auth/login');
             }
             return req.session.save(function(){
-              res.redirect('/topic');
+              res.redirect('/profile');
             });
           });
         }
       }
     }
+
+    route.get('/facebook', passport.authenticate('facebook', {
+      scope:
+      [
+        'email'
+      ]
+    }));
+    route.get('/facebook/callback', function(req, res, next) {
+      passport.authenticate('facebook', OAuthCallback(req, res, next))(req, res, next);
+    });
+
+    route.get('/google', passport.authenticate('google', {
+      scope:
+      [
+        'https://www.googleapis.com/auth/plus.login',
+        'https://www.googleapis.com/auth/userinfo.email'
+      ]
+    }));
+    route.get('/google/callback', function(req, res, next) {
+      passport.authenticate('google', OAuthCallback(req, res, next))(req, res, next);
+    });
+
+    route.get('/twitter', passport.authenticate('twitter', {
+      // scope:
+      // [
+      //   'https://www.googleapis.com/auth/plus.login',
+      //   'https://www.googleapis.com/auth/userinfo.email'
+      // ]
+    }));
+    route.get('/twitter/callback', function(req, res, next) {
+      passport.authenticate('twitter', OAuthCallback(req, res, next))(req, res, next);
+    });
+
+    route.get('/kakao', passport.authenticate('kakao', {
+
+    }));
+    route.get('/kakao/callback', function(req, res, next){
+      passport.authenticate('kakao', OAuthCallback(req, res, next))(req, res, next);
+    })
+
     // function updateUser(req, res){
     //   var sql = 'UPDATE users SET ? WHERE id=?';
     //   conn.query(sql, [req.user, req.user.id], function(err, results){
@@ -375,105 +409,7 @@ module.exports = function(passport){
     //     return res.redirect('/auth/login');
     //   }
     // })
-    // route.get('/google', passport.authenticate('google', {
-    //   scope:
-    //   [
-    //     'https://www.googleapis.com/auth/plus.login',
-    //     'https://www.googleapis.com/auth/userinfo.email'
-    //   ]
-    // }));
-    // route.get('/google/callback', function(req, res, next) {
-    //   passport.authenticate('google', OAuthCallback(req, res, next))(req, res, next);
-    // });
-    // route.get('/twitter', passport.authenticate('twitter', {
-    //   // scope:
-    //   // [
-    //   //   'https://www.googleapis.com/auth/plus.login',
-    //   //   'https://www.googleapis.com/auth/userinfo.email'
-    //   // ]
-    // }));
-    // route.get('/twitter/callback', function(req, res, next) {
-    //   passport.authenticate('twitter', OAuthCallback(req, res, next))(req, res, next);
-    // });
-    // route.get('/kakao', passport.authenticate('kakao', {
 
-    // }));
-    // route.get('/kakao/callback', function(req, res, next){
-    //   passport.authenticate('kakao', OAuthCallback(req, res, next))(req, res, next);
-    // })
-    // route.post('/register', function(req, res){
-    //   hasher({password:req.body.password}, function(err, pass, salt, hash){
-    //     var user = {
-    //       localId: req.body.username,
-    //       password:hash,
-    //       salt:salt,
-    //       displayName:req.body.displayName,
-    //       //email: 'TEMP@temp.com'
-    //     };
-    //     var sql = 'INSERT INTO users SET ?';
-    //     conn.query(sql, user,function(err, results){
-    //       if(err){
-    //         console.log(err);
-    //         res.status(500);
-    //       } else {
-    //         user.id = results.insertId;
-    //         req.login(user, function(err){
-    //           req.session.save(function(){
-    //             res.redirect('/topic');
-    //           });
-    //         });
-    //       }
-    //     })
-    //   });
-    // });
-    // route.get('/register/oauth',function(req,res){
-    //   var newuserString = req.flash('RegisterRequired');
-    //   if(newuserString.length!=0){
-    //     var newuser = JSON.parse(newuserString[0]);
-    //     req.session.tempuser = newuser;
-    //     req.session.save(function(){
-    //       var user = newuser;
-    //       if(!user.displayName){
-    //         user.displayName = "";
-    //       }
-    //       if(!user.email){
-    //         user.email = "";
-    //       }
-    //       res.render('./auth/register/oauth',{
-    //         'newuser':user
-    //       });
-    //     })
-    //   } else {
-    //     res.status(404);
-    //     return res.redirect('/auth/login');
-    //   }
-    // });
-    // route.post('/register/oauth', function(req, res){
-    //   if(req.session.tempuser){
-    //     var sql = 'INSERT INTO users SET ?';
-    //     var newuser = req.session.tempuser;
-    //     newuser.displayName = req.body.displayName;
-    //     newuser.email = req.body.email;
-    //     delete req.session['tempuser'];
-    //     conn.query(sql, newuser, function(err, results){
-    //       if(err){
-    //         console.log(err);
-    //         res.status(500);
-    //         res.redirect('/auth/login');
-    //       } else {
-    //         newuser.id = results.insertId;
-    //         req.login(newuser, function(err){
-    //           req.session.save(function(){
-    //             res.redirect('/topic');
-    //           });
-    //         });
-    //       }
-    //     });
-    //   }
-    // });
-    // route.get('/register', function(req, res){
-    //   res.render('./auth/register');
-    // });
     // function unregisterChainFacebook(req, res){
     //   if(req.user.facebookId){
     //     unlinkFacebook(req, res, unregisterChainGoogle)

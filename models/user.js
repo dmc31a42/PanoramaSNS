@@ -17,7 +17,7 @@ var userSchema = new Schema({
     id: String,
     accessToken: String,
   },
-  twiiter: {
+  twitter: {
     id: String,
     accessToken: String,
   },

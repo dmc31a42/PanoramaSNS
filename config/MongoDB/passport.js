@@ -93,53 +93,73 @@ module.exports = function(app){
       })
     }
   ));
-  // passport.use(new GoogleStrategy({
-  //     clientID: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_ID,
-  //     clientSecret: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_SECRET,
-  //     callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/google/callback",
-  //     passReqToCallback: true,
-  //   }, function(req, accessToken, refreshToken, profile, done){
-  //     console.log(profile);
-  //     var newuser = {
-  //       'googleId':profile.id,
-  //       'googleAccessToken': accessToken,
-  //       'displayName':profile.displayName,
-  //       'email':profile.emails[0].value,
-  //     };
-  //     var sql = 'SELECT * from users WHERE googleId=?';
-  //     conn.query(sql, newuser.googleId, OAuthStrategy(req, done, newuser));
-  //   }
-  // ));
-  // passport.use(new TwitterStrategy({
-  //   consumerKey: SERVER_CONFIG.TWITTER.consumerKey,
-  //   consumerSecret: SERVER_CONFIG.TWITTER.consumerSecret,
-  //   callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/twitter/callback",
-  //   profileFields: ['id', 'displayName', 'username', 'photos', '_json'],
-  //   passReqToCallback: true
-  // }, function(req, accessToken, tokenSecret, profile, done){
-  //   console.log(profile);
-  //   var newuser = {
-  //     'twitterId':profile.id,
-  //     'twitterAccessToken': accessToken,
-  //     'displayName': profile.displayName,
-  //     // 'email': profile.emails[0].value, https://github.com/jaredhanson/passport-twitter/issues/67
-  //   };
-  //   var sql = 'SELECT * from users WHERE twitterId=?';
-  //   conn.query(sql, newuser.twitterId, OAuthStrategy(req, done, newuser));
-  // }));
-  // passport.use(new KakaoStrategy({
-  //   clientID: SERVER_CONFIG.KAKAO.clientID,
-  //   callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/kakao/callback",
-  //   passReqToCallback: true,
-  // }, function(req, accessToken, refreshToken, profile, done){
-  //   console.log(profile);
-  //   var newuser = {
-  //     'kakaoId': profile.id,
-  //     'kakaoAccessToken': accessToken,
-  //     'displayName': profile.username,
-  //   };
-  //   var sql = 'SELECT * from users WHERE kakaoId=?';
-  //   conn.query(sql, newuser.kakaoId, OAuthStrategy(req, done, newuser));
-  // }))
+  passport.use(new GoogleStrategy({
+    clientID: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_ID,
+    clientSecret: SERVER_CONFIG.GOOGLE.GOOGLE_CLIENT_SECRET,
+    callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/google/callback",
+    passReqToCallback: true,
+  }, function(req, accessToken, refreshToken, profile, done){
+    console.log(profile);
+    var newuser = {
+      displayName: profile.displayName,
+      email: profile.emails[0].value,
+      google: {
+        id: profile.id,
+        accessToken: accessToken
+      }
+    };
+    User.findOne({'google.id': profile.id})
+    .then((user)=>{
+      return OAuthStrategy(req, done, user, newuser);
+    })
+    .catch((err)=>{
+      return done(err);
+    });
+  }));
+  passport.use(new TwitterStrategy({
+    consumerKey: SERVER_CONFIG.TWITTER.consumerKey,
+    consumerSecret: SERVER_CONFIG.TWITTER.consumerSecret,
+    callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/twitter/callback",
+    profileFields: ['id', 'displayName', 'username', 'photos', '_json'],
+    passReqToCallback: true
+  }, function(req, accessToken, tokenSecret, profile, done){
+    console.log(profile);
+    var newuser = {
+      displayName: profile.displayName,
+      // email: profile.emails[0].value, https://github.com/jaredhanson/passport-twitter/issues/67
+      twitter:{
+        id: profile.id,
+        accessToken: accessToken
+      }
+    };
+    User.findOne({'twitter.id': profile.id})
+    .then((user)=>{
+      return OAuthStrategy(req, done, user, newuser);
+    })
+    .catch((err)=>{
+      return done(err);
+    })
+  }));
+  passport.use(new KakaoStrategy({
+    clientID: SERVER_CONFIG.KAKAO.clientID,
+    callbackURL: SERVER_CONFIG.HOST.Default_URL + "/auth/kakao/callback",
+    passReqToCallback: true,
+  }, function(req, accessToken, refreshToken, profile, done){
+    console.log(profile);
+    var newuser = {
+      displayName: profile.displayName,
+      kakao: {
+        id: profile.id,
+        accessToken: accessToken
+      }
+    };
+    User.findOne({'kakao.id': profile.id})
+    .then((user)=>{
+      return OAuthStrategy(req, done, user, newuser);
+    })
+    .catch((err)=>{
+      return done(err);
+    })
+  }))
   return passport;
 }
