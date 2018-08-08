@@ -3,25 +3,25 @@ block layout
   form(action="/auth/link/oauth", method="post")
     p
       |기존&nbsp;
-      if user.localId
+      if user.local.id
         |id/password&nbsp;
-      if user.facebookId
+      if user.facebook.id
         |facebook&nbsp;
-      if user.googleId
+      if user.google.id
         |google&nbsp;
-      if user.twitterId
+      if user.twitter.id
         |twitter&nbsp;
-      if user.kakaoId
+      if user.kakao.id
         |kakao&nbsp;
     p
       |신규&nbsp;
-      if newuser.facebookId
+      if newuser.facebook
         |facebook
-      if newuser.googleId
+      if newuser.google
         |google
-      if newuser.twitterId
+      if newuser.twitter
         |twitter
-      if newuser.kakaoId
+      if newuser.kakao
         |kakao&nbsp;
     p
       input(type="submit")

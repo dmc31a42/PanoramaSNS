@@ -51,11 +51,6 @@ module.exports = function(passport){
         var newuser = JSON.parse(newuserString[0]);
         req.session.tempuser = newuser;
         req.session.save(function(){
-          // if(!user.displayName){
-          // }
-          // if(!user.email){
-          //   user.email = "";
-          // }
           res.render('./auth/register/oauth',{
             'newuser':newuser
           });
@@ -85,9 +80,6 @@ module.exports = function(passport){
         });
       }
     });
-
-    // [[unregister]]
-
 
     // [[ login ]]
     route.get('/login', function(req, res){
@@ -186,117 +178,11 @@ module.exports = function(passport){
       passport.authenticate('kakao', OAuthCallback(req, res, next))(req, res, next);
     })
 
-    // function updateUser(req, res){
-    //   var sql = 'UPDATE users SET ? WHERE id=?';
-    //   conn.query(sql, [req.user, req.user.id], function(err, results){
-    //     if(err){
-    //       console.log(err);
-    //       res.status(500);
-    //     } else {
-    //       res.redirect('/profile');
-    //     }
-    //   });
-    // }
-    // function returnToProfile(res, req){
-    //   res.status(500);
-    //   return res.redirect('/profile');
-    // }
-    // function unlinkLocal(req, res, successCallback, failureCallback){
-    //   if(!successCallback){
-    //     successCallback = updateUser;
-    //   }
-    //   if(!failureCallback){
-    //     failureCallback = returnToProfile;      
-    //   }
-    //   req.user.localId = null;
-    //   req.user.password = null;
-    //   req.user.salt = null;
-    //   successCallback(req, res);
-    // }
-    // function unlinkFacebook(req, res, successCallback, failureCallback){
-    //   if(!successCallback){
-    //     successCallback = updateUser;
-    //   }
-    //   if(!failureCallback){
-    //     failureCallback = returnToProfile;      
-    //   }
-    //   request({
-    //     uri: "https://graph.facebook.com/v3.0/" 
-    //       + req.user.facebookId 
-    //       + "/permissions?access_token=" 
-    //       + req.user.facebookAccessToken,
-    //     method: "DELETE",
-    //   }, function(error, request_res, body){
-    //     console.log(body);
-    //     var JSONResults = JSON.parse(body);
-    //     if(JSONResults.success && JSONResults.success == true){
-    //       req.user.facebookAccessToken = null;
-    //       req.user.facebookId = null;
-    //       successCallback(req, res);
-    //     } else {
-    //       failureCallback(res,req);
-    //     }
-    //   });
-    // }
-    // function unlinkGoogle(req, res, successCallback, failureCallback){
-    //   if(!successCallback){
-    //     successCallback = updateUser;
-    //   }
-    //   if(!failureCallback){
-    //     failureCallback = returnToProfile;      
-    //   }
-    //   request({
-    //     uri: "https://accounts.google.com/o/oauth2/revoke?token=" + req.user.googleAccessToken,
-    //     headers: {
-    //       "Content-type": "application/x-www-form-urlencoded"
-    //     }, 
-    //     method: "GET",
-    //   }, function(err, request_res, body){
-    //     console.log(request_res);
-    //     if(request_res.statusCode == 200){
-    //       req.user.googleAccessToken = null;
-    //       req.user.googleId = null;
-    //       successCallback(req, res);
-    //     } else {
-    //       failureCallback(res,req);
-    //     }
-    //   })
-    // }
-    // function unlinkTwitter(req, res, successCallback, failureCallback){
-    //   if(!successCallback){
-    //     successCallback = updateUser;
-    //   }
-    //   if(!failureCallback){
-    //     failureCallback = returnToProfile;      
-    //   }
-    //   req.user.twitterAccessToken = null;
-    //   req.user.twitterId = null;
-    //   successCallback(req, res);
-    // }
-    // function unlinkKakao(req, res, successCallback, failureCallback){
-    //   if(!successCallback){
-    //     successCallback = updateUser;
-    //   }
-    //   if(!failureCallback){
-    //     failureCallback = returnToProfile;      
-    //   }
-    //   request({
-    //     uri: "https://kapi.kakao.com/v1/user/unlink",
-    //     headers: {
-    //       "Authorization": "Bearer " + req.user.kakaoAccessToken
-    //     }, 
-    //     method: "POST",
-    //   }, function(err, request_res, body){
-    //     console.log(request_res);
-    //     if(request_res.statusCode == 200){
-    //       req.user.kakaoAccessToken = null;
-    //       req.user.kakaoId = null;
-    //       successCallback(req, res);
-    //     } else {
-    //       failureCallback(res,req);
-    //     }
-    //   })
-    // }
+
+    
+
+   
+
     // route.get('/unlink', function(req, res){
     //   switch(req.query.service){
     //     case "local":
@@ -316,150 +202,245 @@ module.exports = function(passport){
     //       break;
     //   }
     // });
-    // route.get('/link/local', function(req, res, next){
-    //   res.render('./auth/link/local',{'user': req.user});
-    // })
-    // route.post('/link/local', function(req, res, next){
-    //   var sql = 'SELECT * FROM users WHERE localId=?'
-    //   conn.query(sql,req.body.username, function(err, results){
-    //     if(err) {
 
-    //     } else if(results.length>0){
+    // [[link]]
+    route.get('/link/local', function(req, res, next){
+      res.render('./auth/link/local',{'user': req.user});
+    })
+    route.post('/link/local', function(req, res, next){
+      User.findOne({'local.id': req.body.username})
+      .then((user)=>{
+        if(user){
+          return new Promise.reject('There is local id already');
+        }
+        return new Promise(function(resolve, reject){
+          hasher({password:req.body.password}, function(err, pass, salt, hash){
+          req.user.local = {
+            id: req.body.username,
+            password: hash,
+            salt: salt
+          }
+          return req.user.save()
+          .then((user=>{resolve(user)}))
+          .catch((err)=>reject(err));
+        });})
+      })
+      .then((user)=>{
+        return req.logIn(user, function(err){
+          if(err){return new Promise.reject(err);}
+          return req.session.save(function(){
+            return res.redirect('/profile');
+          })
+        })
+      })
+      .catch((err)=>{
+        res.status(500);
+        res.json(err);
+      })
+    });
 
-    //     } else {
-    //       hasher({password:req.body.password}, function(err, pass, salt, hash){
-    //         var user = {
-    //           localId: req.body.username,
-    //           password:hash,
-    //           salt:salt
-    //         };
-    //         var sql = 'UPDATE users SET ? WHERE id=?';
-    //         conn.query(sql, [user, req.user.id],function(err, results){
-    //           if(err){
-    //             console.log(err);
-    //             res.status(500);
-    //           } else if(results.changedRows!=1){
-    //             console.log(err);
-    //             res.status(500);
-    //           } else {
-    //             req.user.localId = user.localId;
-    //             req.user.password = user.password;
-    //             req.user.salt = user.salt;
-    //             //req.login(results[0], function(err){
-    //             req.session.save(function(){
-    //               res.redirect('/profile');
-    //             });
-    //             //});
-    //           }
-    //         })
-    //       });
-    //     }
-    //   });
-    // })
 
-    // route.get('/link/oauth', function(req, res, next){
-    //   var newuserString = req.flash('LinkRequired');
-    //   if(newuserString.length!=0) {
-    //     var newuser = JSON.parse(newuserString[0]);
-    //     req.session.tempuser = newuser;
-    //     req.session.save(function(){
-    //       res.render('./auth/link/oauth', {
-    //         'user': req.user,
-    //         'newuser': newuser
-    //       });
-    //     })
-    //   } else {
-    //     res.status(404);
-    //     return res.redirect('/auth/login');
-    //   }
-    // });
-    // route.post('/link/oauth', function(req, res){
-    //   if(req.session.tempuser){
-    //     var sql = 'UPDATE users SET ? WHERE id=?';
-    //     var newuser = {};
-    //     if(req.session.tempuser.facebookId){
-    //       newuser.facebookId = req.session.tempuser.facebookId;
-    //       newuser.facebookAccessToken = req.session.tempuser.facebookAccessToken;
-    //     } else if(req.session.tempuser.googleId){
-    //       newuser.googleId = req.session.tempuser.googleId;
-    //       newuser.googleAccessToken = req.session.tempuser.googleAccessToken;
-    //     } else if(req.session.tempuser.twitterId){
-    //       newuser.twitterId = req.session.tempuser.twitterId;
-    //       newuser.twitterAccessToken = req.session.tempuser.twitterAccessToken;
-    //     } else if(req.session.tempuser.kakaoId){
-    //       newuser.kakaoId = req.session.tempuser.kakaoId;
-    //       newuser.kakaoAccessToken = req.session.tempuser.kakaoAccessToken;
-    //     }
-    //     delete req.session['tempuser'];
-    //     conn.query(sql, [newuser, req.user.id], function(err, results){
-    //       if(err){
-    //         console.log(err);
-    //         res.status(500);
-    //         res.redirect('/auth/login');
-    //       } else {
-    //         req.logIn(results[0], function(err){
-    //           req.session.save(function(){
-    //             res.redirect('/profile');
-    //           })
-    //         })
-    //       }
-    //     });
-    //   } else {
-    //     res.status(404);
-    //     return res.redirect('/auth/login');
-    //   }
-    // })
+    route.get('/link/oauth', function(req, res, next){
+      var newuserString = req.flash('LinkRequired');
+      if(newuserString.length!=0) {
+        var newuser = JSON.parse(newuserString[0]);
+        req.session.tempuser = newuser;
+        req.session.save(function(){
+          res.render('./auth/link/oauth', {
+            'user': req.user,
+            'newuser': newuser
+          });
+        })
+      } else {
+        res.status(404);
+        return res.redirect('/auth/login');
+      }
+    });
+    route.post('/link/oauth', function(req, res){
+      if(req.session.tempuser){
+        var sql = 'UPDATE users SET ? WHERE id=?';
+        var newuser = {};
+        if(req.session.tempuser.facebook){
+          req.user.facebook = req.session.tempuser.facebook;
+        } else if(req.session.tempuser.google){
+          req.user.google = req.session.tempuser.google;
+        } else if(req.session.tempuser.twitter){
+          req.user.twitter = req.session.tempuser.twitter;
+        } else if(req.session.tempuser.kakao){
+          req.user.kakao = req.session.tempuser.kakao;
+        }
+        delete req.session['tempuser'];
+        req.user.save()
+        .then((user)=>{
+          return req.logIn(user, function(err){
+            return req.session.save(function(){
+              return res.redirect('/profile');
+          })});
+        })
+        .catch((err)=>{
+          console.log(err);
+          res.status(500);
+          res.json(err);
+        })
+      } else {
+        res.status(404);
+        return res.redirect('/auth/login');
+      }
+    })
+    
+    // [[unlink & unregister]]
 
-    // function unregisterChainFacebook(req, res){
-    //   if(req.user.facebookId){
-    //     unlinkFacebook(req, res, unregisterChainGoogle)
-    //   } else {
-    //     unregisterChainGoogle(req, res);
-    //   }
-    // }
-    // function unregisterChainGoogle(req, res){
-    //   if(req.user.googleId){
-    //     unlinkGoogle(req, res, unregisterChainTwitter)
-    //   } else {
-    //     unregisterChainTwitter(req, res);
-    //   }
-    // }
-    // function unregisterChainTwitter(req, res){
-    //   if(req.user.twitterId){
-    //     unlinkTwitter(req, res, unregisterLast)
-    //   } else {
-    //     unregisterChainKakao(req, res);
-    //   }
-    // }
-    // function unregisterChainKakao(req, res){
-    //   if(req.user.kakaoId){
-    //     unlinkKakao(req, res, unregisterLast)
-    //   } else {
-    //     unregisterLast(req, res);
-    //   }
-    // }
-    // function unregisterLast(req, res){
-    //   var id = req.user.id;
-    //   var sql = 'DELETE FROM users WHERE id=?'
-    //   conn.query(sql, id, function(err, results){
-    //     if(err){
-    //       console.log(err);
-    //       res.status(500);
-    //     } else {
-    //       req.logout();
-    //       req.session.save(function(){
-    //         req.flash('unregister','Unregisted');
-    //         res.redirect('/topic');
-    //       })
-    //     }
-    //   });
-    // }
-    // route.post('/unregister', function(req, res){
-    //   if(req.user){
-    //     unregisterChainFacebook(req, res);
-    //   } else {
-    //     res.status(404);
-    //   }
-    // });
+    function updateUser(req, res){
+      req.user.save()
+      .then((user)=>{
+        res.redirect('/profile');
+      })
+      .catch((err)=>{
+        console.log(err);
+        res.status(500);
+        res.json(err);
+      })
+    }
+    function returnToProfile(res, req){
+      res.status(500);
+      res.redirect('/profile');
+    }
+
+    function unlinkLocal(req, res, callback){
+      return new Promise(function(resolve, reject){
+        req.user.update({$unset:{facebook:1}})
+        .then((user)=>{
+          if(callback){callback(null, user)}
+          else {resolve(user)}
+        })
+        .catch((err)=>{
+          if(callback){callback(err)}
+          else {reject(err)}
+        });
+      })
+    }
+    function unlinkFacebook(req, res, callback){
+      return new Promise(function(resolve, reject){
+        request({
+          uri: "https://graph.facebook.com/v3.0/" 
+            + req.user.facebook.id 
+            + "/permissions?access_token=" 
+            + req.user.facebook.accessToken,
+          method: "DELETE",
+        }, function(error, request_res, body){
+          console.log(body);
+          var JSONResults = JSON.parse(body);
+          if(JSONResults.success && JSONResults.success == true){
+            req.user.update({$unset: {facebook: 1}})
+            .then((user)=>{
+              if(callback){callback(null, user)}
+              else {resolve(user)}
+            })
+            .catch((err)=>{
+              if(callback){callback(err)}
+              else {reject(err)}
+            })
+          } else {
+            if(callback){callback(err)}
+            else {reject(err)}
+          }
+        });
+      });
+    }
+
+    function unlinkGoogle(req, res, callback){
+      return new Promise(function(resolve, reject){
+        request({
+          uri: "https://accounts.google.com/o/oauth2/revoke?token=" + req.user.google.accessToken,
+          headers: {
+            "Content-type": "application/x-www-form-urlencoded"
+          }, 
+          method: "GET",
+        }, function(err, request_res, body){
+          if(request_res.statusCode == 200){
+            req.user.update({$unset:{google:1}})
+            .then((user)=>{
+              if(callback){callback(null, user)}
+              else {resolve(user)}
+            })
+            .catch((err)=>{
+              if(callback){callback(err)}
+              else {reject(err)}
+            })
+          } else {
+            if(callback){callback(err)}
+            else {reject(err)}
+          }
+        })
+      })
+    }
+    function unlinkTwitter(req, res, callback){
+      return new Promise(function(resolve, reject){
+        req.user.update({$unset:{twitter:1}})
+        .then((user)=>{
+          if(callback){callback(null, user)}
+          else {resolve(user)}
+        })
+        .catch((err)=>{
+          if(callback){callback(err)}
+          else {reject(user)}
+        })
+      })
+    }
+
+    function unlinkKakao(req, res, callback){
+      return new Promise(function(resolve, reject){
+        request({
+          uri: "https://kapi.kakao.com/v1/user/unlink",
+          headers: {
+            "Authorization": "Bearer " + req.user.kakao.accessToken
+          }, 
+          method: "POST",
+        }, function(err, request_res, body){
+          if(request_res.statusCode == 200){
+            req.user.update({$unset:{kakao:1}})
+            .then((user)=>{
+              if(callback){callback(null, user)}
+              else {resolve(user)}
+            })
+            .catch((err)=>{
+              if(callback) {callback(err)}
+              else {reject(err)}
+            })
+          } else {
+            if(callback) {callback(err)}
+            else {reject(err)}
+          }
+        })
+      })
+    }
+
+    route.post('/unregister', function(req, res){
+      if(req.user){
+        Promise.all([
+          unlinkLocal(req, res),
+          unlinkFacebook(req, res),
+          unlinkGoogle(req, res),
+          unlinkTwitter(req, res),
+          unlinkKakao(req, res)
+        ])
+        .then((values)=>{
+          return req.user.remove()
+        })
+        .then((user)=>{
+          req.logOut();
+          req.session.save(function(){
+            req.flash('unregister', 'Unregisted');
+            res.redirect('/auth/login');
+          })
+        })
+        .catch((err)=>{
+          res.status(500);
+          res.json(err);
+        })
+      } else {
+        res.status(404);
+      }
+    });
     return route;
 }

@@ -3,13 +3,13 @@ block layout
   form(action="/auth/link/local", method="post")
     p
       |기존&nbsp;
-      if user.facebookId
+      if user.facebook.id
         |facebook&nbsp;
-      if user.googleId
+      if user.google.id
         |google&nbsp;
-      if user.twitterId
+      if user.twitter.id
         |twitter&nbsp;
-      if user.kakaoId
+      if user.kakao.id
         |kakaoId&nbsp;
     p
       |신규&nbsp;
